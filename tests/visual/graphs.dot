@@ -1,0 +1,86 @@
+digraph graphs {
+    graph [label="tGraphAlg.nim — all graphs", labelloc="t", fontsize=20, compound=true, rankdir=LR, pad=0.3];
+    node  [shape=circle, style=filled, fillcolor="#f8f8f8", color="#444"];
+    edge  [color="#555"];
+    graph [fontname="sans"];
+
+    // ---------- g0 ----------
+    subgraph cluster_g0 {
+        label="g0: simple chain";
+        fontsize=14; style=rounded; color="#bbb"; bgcolor="#fafafa";
+        g0_A [label="A", fillcolor="#cfe8ff", color="#2563eb"];
+        g0_B [label="B"];
+        g0_C [label="C", fillcolor="#ffd6d6", color="#dc2626"];
+        g0_A -> g0_B -> g0_C;
+        g0_C [xlabel="\"Desc\""];
+    }
+
+    // ---------- g1 ----------
+    subgraph cluster_g1 {
+        label="g1: diamondlike";
+        fontsize=14; style=rounded; color="#bbb"; bgcolor="#fafafa";
+        g1_A [label="A", fillcolor="#cfe8ff", color="#2563eb"];
+        g1_B [label="B"]; g1_H [label="H"];
+        g1_C [label="C"]; g1_D [label="D"]; g1_E [label="E"];
+        g1_F [label="F"]; g1_G [label="G"];
+        g1_I [label="I", fillcolor="#ffd6d6", color="#dc2626"];
+        g1_J [label="J", fillcolor="#ffd6d6", color="#dc2626"];
+        g1_A -> g1_B -> g1_H;
+        g1_H -> g1_I; g1_H -> g1_J;
+        g1_A -> g1_C;
+        g1_C -> g1_D; g1_C -> g1_E;
+        g1_D -> g1_F; g1_E -> g1_F;
+        g1_F -> g1_G -> g1_I;
+    }
+
+    // ---------- g2 ----------
+    subgraph cluster_g2 {
+        label="g2: loop & singletons";
+        fontsize=14; style=rounded; color="#bbb"; bgcolor="#fafafa";
+        g2_A [label="A", fillcolor="#cfe8ff", color="#2563eb"];
+        g2_B [label="B"]; g2_H [label="H"];
+        g2_C [label="C"]; g2_D [label="D"]; g2_E [label="E"];
+        g2_F [label="F"]; g2_G [label="G"];
+        g2_I [label="I"];
+        g2_J [label="J", fillcolor="#ffd6d6", color="#dc2626"];
+
+        g2_A -> g2_B -> g2_H;
+        g2_H -> g2_I; g2_H -> g2_J;
+        g2_A -> g2_C;
+        g2_C -> g2_D; g2_C -> g2_E;
+        g2_D -> g2_F; g2_E -> g2_F;
+        g2_F -> g2_G -> g2_I;
+        g2_I -> g2_E; // loop / back edge
+
+        subgraph cluster_g2_sing {
+            label="singletons"; style=dashed; color="#999";
+            g2_L [label="L"]; g2_M [label="M"]; g2_N [label="N"];
+        }
+    }
+
+    // ---------- g3 ----------
+    subgraph cluster_g3 {
+        label="g3: self edge";
+        fontsize=14; style=rounded; color="#bbb"; bgcolor="#fafafa";
+        g3_A [label="A", fillcolor="#eee", color="#888"];
+        g3_A -> g3_A;
+    }
+
+    // ---------- g4 ----------
+    subgraph cluster_g4 {
+        label="g4: multicycle single SCC";
+        fontsize=14; style=rounded; color="#bbb"; bgcolor="#fafafa";
+        g4_A [label="A", fillcolor="#cfe8ff", color="#2563eb"];
+        g4_B [label="B"]; g4_C [label="C"]; g4_D [label="D"];
+        g4_A -> g4_B;
+        g4_B -> g4_C;
+        g4_C -> g4_B;
+        g4_C -> g4_D;
+        g4_D -> g4_B;
+
+        subgraph cluster_g4_scc {
+            label="SCC"; style=dashed; color="#999";
+            g4_B; g4_C; g4_D;
+        }
+    }
+}
