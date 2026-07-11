@@ -1,0 +1,4 @@
+nimTitle	util	graphalg/util.html	module src/graphalg/util		0
+nim	count	graphalg/util.html#count	proc count(x: iterator): int		2
+nim	smallest	graphalg/util.html#smallest,set[T]	proc smallest[T](x: set[T]): T		100
+nim	biggest	graphalg/util.html#biggest,set[T]	proc biggest[T](x: set[T]): T		105

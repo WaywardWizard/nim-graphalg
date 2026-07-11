@@ -1,0 +1,10 @@
+nimTitle	datastructures	graphalg/datastructures.html	module src/graphalg/datastructures		0
+nim	IndexedList	graphalg/datastructures.html#IndexedList	object IndexedList		3
+nim	`in`	graphalg/datastructures.html#in,IndexedList,	proc `in`(x: var IndexedList; val: IndexedList.L.T)		7
+nim	len	graphalg/datastructures.html#len,IndexedList	proc len(x: IndexedList): int		10
+nim	items	graphalg/datastructures.html#items.i,IndexedList	iterator items(x: IndexedList): IndexedList.L.T		11
+nim	add	graphalg/datastructures.html#add,IndexedList,	proc add(x: var IndexedList; val: IndexedList.L.T)		13
+nim	prepend	graphalg/datastructures.html#prepend,IndexedList,	proc prepend(x: var IndexedList; val: IndexedList.L.T)		18
+nim	del	graphalg/datastructures.html#del,IndexedList,	proc del(x: var IndexedList; val: IndexedList.L.T)		23
+nim	popFirst	graphalg/datastructures.html#popFirst,IndexedList	proc popFirst(x: var IndexedList): IndexedList.L.T		27
+nim	popLast	graphalg/datastructures.html#popLast,IndexedList	proc popLast(x: var IndexedList): IndexedList.L.T		32
