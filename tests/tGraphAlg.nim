@@ -29,7 +29,7 @@ var
 
 var
   bases = [(g0,@["A"]),(g1,@["A"]), (g2,@["A","L","M","N"]), (g3, @["A"]), (g4,@["A"]), (g5, @["Z"])]
-  sccs = [(g0,3), (g1,10), (g2, 10), (g3,1), (g4,2)]
+  scc = [(g0,3), (g1,10), (g2, 10), (g3,1), (g4,2)]
   isolatedSccs = [(g0, 0), (g1, 0), (g2,3), (g3, 1), (g4,0)]
   singletonSccs = [(g0, 3), (g1,10), (g2,9), (g3, 1), (g4,1)]
   # Note that a mFAS is not unique, consider a simple SCC loop, any edge breaks it
@@ -66,12 +66,12 @@ proc fasElsOrderString(graph: Graph): string =
     result &= $v
 
 func countIsolatedScc(g: Graph): int =
-  for c in g.cycles:
+  for c in g.sccs:
     if c.isolated():
       result += 1
 
 func countSingletonScc(g: Graph): int =
-  for c in g.cycles:
+  for c in g.sccs:
     if c.singleton():
       result += 1
 
@@ -186,16 +186,16 @@ suite "Unit":
 
 suite "Integration":
   test "Cycles":
-    for (g,n) in sccs:
-      check g.cycles.toseq.len == n
+    for (g,n) in scc:
+      check g.sccs.toseq.len == n
 
   test "Condensation":
-    for (g,n) in sccs:
+    for (g,n) in scc:
       var
         byCondensation = collect:
           for v in g.condensation().vertices: {$v}
         byCycle = collect:
-          for c in g.cycles: {$c}
+          for c in g.sccs: {$c}
 
       # cycle returns same list of grouped labels that condensation does
       check (byCondensation -+- byCycle).len() == 0
@@ -323,7 +323,7 @@ suite "Integration":
       var
         pre, post: int
         n=thefas.len
-      for c in g.cycles:
+      for c in g.sccs:
         if c.singleton():
           var nself = c.vertices.chooseAny.selfEdges.len
           pre += nself
@@ -341,7 +341,7 @@ suite "Integration":
       var
         post: int
         n=thefas.len
-      for c in g.cycles:
+      for c in g.sccs:
         if c.singleton():
           var nself = c.vertices.chooseAny.selfEdges.len
           post += nself

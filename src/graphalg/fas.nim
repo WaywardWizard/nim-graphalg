@@ -425,7 +425,7 @@ proc test(constraint: ConnectivityConstraint, g: Graph, fas: HashSet[Edge]): boo
   of ccAcyclic:
     let efilter: proc(x: Edge): bool {.closure,nosideeffect,gcsafe.} = (x: Edge) => x in fas # edge filter
     # Acyclic iff every SCC is a singleton (no multi-vertex SCC => no cycle)
-    for c in g.cycles(pruned = some(efilter)):
+    for c in g.sccs(pruned = some(efilter)):
       if c.vertices.len > 1:
         return false
     return true
@@ -459,7 +459,7 @@ proc test[D, M](
   case constraint
   of ccAcyclic: # O(V+E)
     # Acyclic iff every SCC is a singleton (no multi-vertex SCC => no cycle)
-    for c in cycles[Vertex[D, M]](s.vertices, pruned = some(efilter)):
+    for c in sccs[Vertex[D, M]](s.vertices, pruned = some(efilter)):
       if c.vertices.len > 1:
         return false
     return true

@@ -65,6 +65,7 @@ type
     dInbound # edge to node
     dAll # both
 
+    
   SCC*[D, M] = StronglyConnectedComponent[D, M]
 
   # empty object for empty edge or node
@@ -97,19 +98,13 @@ type
     condensation: Graph[SCC[D,M], NoData]
 
   EdgeFilter[E: Edge] = proc(e: E): bool {.closure, nosideeffect, gcsafe.}
+  ## Exclude edges from calculation
   VertexFilter[V: Vertex] = proc(v: V): bool {.closure, noSideEffect, gcsafe.}
+  ## Exclude vertices from a calculation
 
 proc hash*[T: ref](x: T): Hash {.inline.} =
   ## the value of x is a memory address since it is a ref type
   cast[Hash](x)
-
-proc hash*(e: Edge): Hash =
-  # Edges are equivalent between same two vertices and with the same metadata
-  var h: Hash = 0
-  h = h !& hash(e.outbound)
-  h = h !& hash(e.inbound)
-  h = h !& hash(e.meta)
-  result = !$h
 
 proc selfEdge(e: Edge): bool {.inline.} = e.outbound == e.inbound
 
@@ -481,7 +476,7 @@ proc singleton(scc: SCC): bool {.inline.} =
   ## Single vertex that may or may not connect to other sccs
   scc.vertices.card == 1
 
-iterator cycles[V: Vertex](
+iterator sccs[V: Vertex](
     vertices: Iterable[V],
     pruned = none[proc(x: Edge[V.D, V.M]): bool {.noSideEffect, gcsafe.}](),
 ): SCC[V.D, V.M] =
@@ -617,7 +612,7 @@ iterator cycles[V: Vertex](
           while path.len > 0 and (dfsCompletePathNotEmpty() or pathOverExtended()):
             backtrack path.pop()
 
-iterator cycles(
+iterator sccs(
     g: Graph,
     pruned = none[proc(e: Edge[Graph.D, Graph.M]): bool {.noSideEffect, gcsafe.}](),
 ): SCC[Graph.D, Graph.M] =
@@ -632,7 +627,7 @@ iterator cycles(
     #     for v in g.vertices:
     #       yield v
 
-    for c in cycles[Vertex[Graph.D, Graph.M]](g.vertices, pruned):
+    for c in sccs[Vertex[Graph.D, Graph.M]](g.vertices, pruned):
       g.scc.add c
       yield c
 
@@ -644,7 +639,7 @@ proc whichScc[D, M](g: Graph[D, M], vertex: Vertex[D, M]): SCC[D, M] =
   if vertex in g.vertexToScc:
     return g.vertexToScc[vertex]
   else:
-    for scc in g.cycles:
+    for scc in g.sccs:
       block processScc:
         # each scc processed as a whole, move to next SCC if processed before
         for v in scc.vertices:
@@ -675,7 +670,7 @@ proc condensation*[D, M](g: Graph[D, M]): typeof(g.condensation) =
   else: # generate condensation
     # create vertices
     var condensationTable = collect:
-      for c in g.cycles: # The vertices of condensation are SCCs of graph
+      for c in g.sccs: # The vertices of condensation are SCCs of graph
         {c: Vertex[SCC[D, M], NoData](label: $c, data: c)}
 
     g.condensation = Graph[SCC[D, M], NoData]()
