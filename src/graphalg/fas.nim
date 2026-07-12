@@ -1,6 +1,3 @@
-## Graph Algorithms
-## :Author: Ben Tomlin
-##
 ## # Finding feedback arc sets
 ##
 ## Acyclic: No backedges

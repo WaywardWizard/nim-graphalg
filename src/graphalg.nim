@@ -1,3 +1,6 @@
+## # Graph Algorithms
+## :Author: Ben Tomlin
+## 
 ## Graph structure with useful algorithm implementations.
 ##
 ## Intended as a lower level implementation with enough detail exposed to be
