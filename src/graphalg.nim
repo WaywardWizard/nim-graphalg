@@ -9,18 +9,37 @@
 ##
 ## Intended to be performant at scale but not use case optimized. If you want
 ## full optimization its best to implement your own fully specific to your use
-## case using more performant structures like packed arrays.
+## case using more performant structures like packed arrays. Memory is traded for
+## computation - particularly to bound ccmplexity
 ##
 ## Edge and Vertex hold generic types to be suited for any purpose.
-##
+## 
+## # Strongly Connected Component
+## Set of vertices, for which any vertex is reachable from any other by some path.
+## A graph has a unique set of SCCs. All feedback arcs in a graph exist in SCCs.
+## 
+## A single vertex is considered an SCC (provided any vertex that can reach to it
+## cannot be reached from it). Such a vertex may have a self edge.
+## 
 ## # Feedback Arc Sets
-## Tarjans SCC provides a set per SCC. A condensed graph is acyclic by definition
-## A graph can have its edges pruned to a weakly connected DAG by
-##    1) Condense graph with Tarjans SCC
-##    2) Prune or deactivate backedges of all SCC
-##
-## # Additions
-## Consider mapping vertices
+## Set of edges that form cycles in a directed graph. Removing such edges will 
+## make the graph acyclic
+## 
+## ## Algorithm
+## Find all SCC. Find FAS per SCC. The union of all SCCs FAS is the graph FAS.
+## 
+## # Condensation
+## A graph can be collapsed into its SCCs. A vertex per SCC, with edges between
+## SCCs as per the edges between their individual vertices. A condensation is
+## useful for topologically sorting. By definition condensed graphs are acyclic.
+## 
+## # Basis
+## Set of vertices in a graph that from which all other vertices may be reached
+## but no other basis vertex may be reached.
+## 
+## # Finding Vertices
+## Lookup vertices with a label, or with a data value. No distinct two vertices 
+## with the same label and data may exist.
 import std/[tables, deques, math, sets, sugar, hashes, strutils, sequtils]
 import std/[options, math]
 import graphalg/[util]
@@ -30,37 +49,37 @@ type
   ## There is an items iterator defined for the type
   Iterable[T] =
     concept x
-        for element in x:
-          element is T
+      for element in x:
+        element is T
 
-  Edge[D, M] = ref object
-    ## edges to a vertex are stored both on the source and sink vertex
-    outbound, inbound: Vertex[D, M]
-    meta: M
+  Edge*[D, M] = ref object
+    ## edges to a vertex are stored both on the source and sink vertex. 
+    outbound*, inbound*: Vertex[D, M] ## vertex arc exits and enters
+    meta*: M ## metadata, weights, applicability criteria etc
 
   Vertex*[D, M] = ref object
     label*: string
-    data: D # not necessarily unique, but label + data must be
-    outbound, inbound: seq[Edge[D, M]]
+    data*: D # not necessarily unique, but label + data must be
+    outbound*, inbound*: seq[Edge[D, M]]
     # When comparing edges with `==`, as ref object, the ref addresses themselves
     # are compared. Feedback arc sets and similar can generate edge instances for
     # self edges but each arc set construction will have then a different edge
     # instance to represent the same edge. We declare self edges as edge instances
     # so they are be canonical.
-    selfEdges: seq[Edge[D,M]] # suppord multiple self edges
+    selfEdges*: seq[Edge[D,M]] # suppord multiple self edges
 
   StronglyConnectedComponent[D, M] = ref object # root can be any node.
-    vertices: HashSet[Vertex[D, M]]
+    vertices*: HashSet[Vertex[D, M]]
 
     # outbound encompasses all inter scc edges across all sccs. Use at condensation
-    inbound, outbound: HashSet[Edge[D, M]]
+    inbound*, outbound*: HashSet[Edge[D, M]]
 
     # Note the set of backedges is a property of the SCC root. Forming an SCC
     # with another root could result in a different set of backedgesv Backedges
     # form a feedback arc set, but not a minimal feedback arc set
     #backedges: HashSet[Edge[D, M]]
 
-  Direction = enum
+  Direction* = enum
     dOutbound # edge from node
     dInbound # edge to node
     dAll # both
@@ -97,12 +116,12 @@ type
     # One vertex per SCC, edges between vertices of SCCs link them
     condensation: Graph[SCC[D,M], NoData]
 
-  EdgeFilter[E: Edge] = proc(e: E): bool {.closure, nosideeffect, gcsafe.}
+  EdgeFilter*[E: Edge] = proc(e: E): bool {.closure, nosideeffect, gcsafe.}
   ## Exclude edges from calculation
-  VertexFilter[V: Vertex] = proc(v: V): bool {.closure, noSideEffect, gcsafe.}
+  VertexFilter*[V: Vertex] = proc(v: V): bool {.closure, noSideEffect, gcsafe.}
   ## Exclude vertices from a calculation
 
-proc hash*[T: ref](x: T): Hash {.inline.} =
+proc hash[T: ref](x: T): Hash {.inline.} =
   ## the value of x is a memory address since it is a ref type
   cast[Hash](x)
 
@@ -125,7 +144,7 @@ proc repr*(v: Vertex): string =
   result = "$#: out  $#,\n$#in   $#" % [v.label, $outs, spacer, $ins]
 
 proc `$`*(v: Vertex): string {.inline.} =
-  v.label
+  v.label 
 
 proc pprint(v: Vertex): string {.inline.} =
   &"Label: {v.label}\nOut:   {v.outbound}\nIn:    {v.inbound}"
@@ -145,10 +164,15 @@ proc `$`*(s: SCC): string =
 proc initVertex*[D, M = NoData](label: string, data: D = default(D)): Vertex[D, M] =
   Vertex[D, M](label: label, data: data)
 
+  
+proc add*[D, M](g: Graph[D, M], v: Vertex[D, M]) =
+  g.vertices.incl v
+  g.mapVertexLookup v
+
 proc initGraph*[D, M](v: openArray[Vertex[D, M]]): Graph[D, M] =
   result = Graph[D, M]()
   for vx in v:
-    result.vertices.incl vx
+    result.add vx
 
 proc mapVertexLookup[D, M](g: Graph[D, M], vx: Vertex[D, M]) =
   ## Maintain vertex lookup by data and label
@@ -175,11 +199,6 @@ proc mapVertexLookup[D, M](g: Graph[D, M], vx: Vertex[D, M]) =
     g.labelToVertexOverflow.mgetOrPut(vx.label).add vx
   else:
     g.labelToVertex[vx.label]=vx
-
-proc add[D, M](g: Graph[D, M], v: Vertex[D, M]) =
-  g.vertices.incl v
-  g.mapVertexLookup v
-
 proc initGraph*[D, M](v: iterator (): Vertex[D, M]): Graph[D, M] =
   # More flexible iterator
   result = Graph[D,M]()
@@ -210,7 +229,7 @@ proc connectToSelf*(x: Vertex, meta: Vertex.M = default[Vertex.M](Vertex.M)) =
   let e = Edge[Vertex.D, Vertex.M](outbound:x,inbound:x,meta:meta)
   x.selfEdges.add e
 
-iterator edges[D, M](v: Vertex[D, M], direction: Direction = dOutbound): Edge[D, M] =
+iterator edges*[D, M](v: Vertex[D, M], direction: Direction = dOutbound): Edge[D, M] =
   ## Iterate edges
   case direction
   of dOutbound:
@@ -225,7 +244,7 @@ iterator edges[D, M](v: Vertex[D, M], direction: Direction = dOutbound): Edge[D,
     for e in v.inbound:
       yield e
 
-iterator edges[D, M](g: Graph[D, M], direction = dOutbound): Edge[D, M] =
+iterator edges*[D, M](g: Graph[D, M], direction = dOutbound): Edge[D, M] =
   ## All edges in graph. Note that outbound edge A->B will be outbound for A,
   ## and inbound for B. All edges are outbound for some vertex and vice versa.
   ## dAll then will iterate over the full set of edges twice
@@ -233,7 +252,7 @@ iterator edges[D, M](g: Graph[D, M], direction = dOutbound): Edge[D, M] =
     for e in v.edges(direction):
       yield e
 
-iterator neighbours(v: Vertex, d: Direction = dOutbound): Vertex =
+iterator neighbours*(v: Vertex, d: Direction = dOutbound): Vertex =
   ## Neighbours reachable from, that reach to vertex or both
   case d
   of dOutbound:
@@ -371,7 +390,7 @@ iterator dfs*[D, M](
     for vx in v.dfs(edgeFilter, vertexFilter, undirected):
       yield vx
 
-iterator bfs(anchor: Vertex): Vertex =
+iterator bfs*(anchor: Vertex): Vertex =
   # Emit vertices in BFS
   type V = Vertex
   var q: Deque[V] = initDeque[V]()
@@ -385,14 +404,14 @@ iterator bfs(anchor: Vertex): Vertex =
       if edge.inbound notin seen:
         q.addLast edge.inbound
         seen.incl edge.inbound
-iterator bfs(graph: Graph): Vertex[Graph.D, Graph.M] =
+iterator bfs*(graph: Graph): Vertex[Graph.D, Graph.M] =
   ## Assumes basis is valid (all vertices reachable from basis, no basis vertex
   ## reachable from any other)
   for v in graph.basis:
     for vx in v.bfs:
       yield vx
 
-proc flux[D, M](
+proc flux*[D, M](
     v: Vertex[D, M],
     efilter = none[proc(x: Edge[D, M]): bool {.closure, noSideEffect, gcsafe.}](),
     countSelfEdges: bool = true
@@ -411,7 +430,7 @@ proc flux[D, M](
         result.i+=1
         result.o+=1
 
-proc lookup[D, M](g: Graph[D, M], d: D, label = none[string]()): Vertex[D, M] =
+proc lookup*[D, M](g: Graph[D, M], d: D, label = none[string]()): Vertex[D, M] =
   ## Find a vertex in graph by data, tiebreak with label
   ##
   ## Given a data value find the vertex associated with that data, Supply a
@@ -432,7 +451,7 @@ proc lookup[D, M](g: Graph[D, M], d: D, label = none[string]()): Vertex[D, M] =
   else:
     return g.dataToVertex[d]
 
-proc lookup(g: Graph, label: string, data=none[Graph.D]()): Vertex[Graph.D,Graph.M] =
+proc lookup*(g: Graph, label: string, data=none[Graph.D]()): Vertex[Graph.D,Graph.M] =
   ## Lookup vertex by label break tie with data
   if label in g.labelToVertexOverflow:
     if data.isnone():
@@ -447,21 +466,21 @@ proc lookup(g: Graph, label: string, data=none[Graph.D]()): Vertex[Graph.D,Graph
   else:
     g.labelToVertex[label]
 
-proc fluxd(v: Vertex): int =
+proc fluxd*(v: Vertex): int =
   let f = v.flux
   f.o - f.i
 
-proc source(v: Vertex): bool {.inline.} =
+proc source*(v: Vertex): bool {.inline.} =
   v.flux.i == 0 and v.flux.o > 0
 
-proc sink(v: Vertex): bool {.inline.} =
+proc sink*(v: Vertex): bool {.inline.} =
   v.flux.i > 0 and v.flux.o == 0
 
-proc isolated(v: Vertex): bool {.inline.} =
+proc isolated*(v: Vertex): bool {.inline.} =
   ## Defined as vertex with no incoming or outgoing edges
   v.flux.i == 0 and v.flux.o == 0
 
-proc isolated(scc: SCC): bool {.inline.} =
+proc isolated*(scc: SCC): bool {.inline.} =
   ## SCC with no vertices containing edges to or from an external vertex, may be multiple vertices
   for v in scc:
     for e in v.edges(dOutbound):
@@ -472,7 +491,7 @@ proc isolated(scc: SCC): bool {.inline.} =
         return false
   return true
 
-proc singleton(scc: SCC): bool {.inline.} =
+proc singleton*(scc: SCC): bool {.inline.} =
   ## Single vertex that may or may not connect to other sccs
   scc.vertices.card == 1
 
@@ -612,22 +631,16 @@ iterator sccs[V: Vertex](
           while path.len > 0 and (dfsCompletePathNotEmpty() or pathOverExtended()):
             backtrack path.pop()
 
-iterator sccs(
+iterator sccs*(
     g: Graph,
-    pruned = none[proc(e: Edge[Graph.D, Graph.M]): bool {.noSideEffect, gcsafe.}](),
 ): SCC[Graph.D, Graph.M] =
-  ## TODO get efilter and scc caching working together
+  ## Iterate SCC of graph, return cached result if necessary
   if g.sccCalculated:
     for c in g.scc:
       yield c
   else:
     g.scc = @[]
-    # let viter =
-    #   iterator (): Vertex[D, M] =
-    #     for v in g.vertices:
-    #       yield v
-
-    for c in sccs[Vertex[Graph.D, Graph.M]](g.vertices, pruned):
+    for c in sccs[Vertex[Graph.D, Graph.M]](g.vertices):
       g.scc.add c
       yield c
 
@@ -655,7 +668,7 @@ proc whichScc[D, M](g: Graph[D, M], vertex: Vertex[D, M]): SCC[D, M] =
         if not result.isNil:
           return
 
-proc condensation*[D, M](g: Graph[D, M]): typeof(g.condensation) =
+proc condensation*[D, M](g: Graph[D, M]): Graph[SCC[D,M],NoData] =
   ## Take a graph and reduce it to an equivalen graph with one vertex per SCC
   ##
   ## Find all SCCs in graph. Generate a vertex for each. For all SCC outbound
@@ -705,7 +718,7 @@ iterator sources[T: Vertex](
     if flux.i == 0 and flux.o > 0:
       yield vx
 
-iterator sources[D, M](g: Graph[D, M]): Vertex[D, M] =
+iterator sources*(g: Graph): Vertex[Graph.D, Graph.M] =
   ## Sources are all nodes that may not be reached from another (no incoming
   ## edges) and that have edges out to another node.
   ##
@@ -715,13 +728,13 @@ iterator sources[D, M](g: Graph[D, M]): Vertex[D, M] =
     if v.flux.i == 0 and v.flux.o > 0:
       yield v
 
-iterator sinks[D, M](g: Graph[D, M]): Vertex[D, M] =
+iterator sinks*(g: Graph): Vertex[Graph.D, Graph.M] =
   for v in g.vertices:
     var flux = v.flux
     if flux.i > 0 and flux.o == 0:
       yield v
 
-iterator isolated(g: Graph): Vertex[Graph.D,Graph.M] =
+iterator isolated*(g: Graph): Vertex[Graph.D,Graph.M] =
   ## Yield vertices that connect to none other than themselves
   for v in g.vertices:
     var flux = v.flux(countSelfEdges=false)
@@ -748,14 +761,14 @@ proc `basis=`*(g: Graph, vlabel: openArray[string]) =
 
   g.basisComplete=true
 
-proc resetBasis(g: Graph) = g.basis = @[]
+proc resetBasis*(g: Graph) = g.basis = @[]
 
 proc chooseAny(x: HashSet): HashSet.A =
   for xx in x:
     return xx
 proc chooseAnyVertex(scc: SCC): Vertex[SCC.D,SCC.M] = scc.vertices.chooseAny
 
-iterator basis(g: Graph): Vertex[Graph.D,Graph.M] {.closure.} =
+iterator basis*(g: Graph): Vertex[Graph.D,Graph.M] {.closure.} =
   ## Iterate graph basis, derive it iteratively if required, cache result
   ##
   ## Find all sccs, filter source sccs, take first vertex from each
@@ -765,7 +778,6 @@ iterator basis(g: Graph): Vertex[Graph.D,Graph.M] {.closure.} =
   ## means that no basis vertex may be reachable from any other by definition.
   ##
   ## A set of SCC are unique to a graph.
-
   if g.basisComplete:
     for v in g.thebasis: yield v
   else:
@@ -800,7 +812,7 @@ iterator basis(g: Graph): Vertex[Graph.D,Graph.M] {.closure.} =
 
 include graphalg/fas
 
-iterator toposort[D, M](
+iterator toposort*[D, M](
     g: Graph[D, M],
     fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]](),
     reverse: bool = false,

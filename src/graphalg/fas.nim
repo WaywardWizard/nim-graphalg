@@ -41,7 +41,7 @@ import std/[options, sets, algorithm, sequtils, enumerate, lists]
 import datastructures
 
 type
-  ConnectivityConstraint = enum
+  ConnectivityConstraint  = enum
     ## Connectivity constraints place restriction on state of a graph (set of
     ## vertices). Their purpose is to add requirements to feedback arc setsv
     ccAcyclic ## No cycles exist in group of vertice
@@ -58,9 +58,9 @@ type
     fsEls ## Eades lin smith ordering
     fsElsReorder ## Eades lin smith with best gap positioning
   
-const BRUTE_EDGES = 20 # dont brute for more edges
-const BRUTE_VERTICES = 10 # dont brute for more vertices
-const JUST_ELS = 3000 # node count before we stop doing reorder passes
+const BRUTE_EDGES* = 20 ## dont brute for more edges
+const BRUTE_VERTICES* = 10 ## dont brute for more vertices
+const JUST_ELS* = 3000 ## node count before we stop doing reorder passes
 
 type
 
@@ -412,10 +412,10 @@ proc fasOptimizedEadesLinSmith[T:Vertex](
     ordering.reorderPass()
   return ordering.fas()
 
-proc fasOptimizedEadesLinSmith*(graph: Graph, passes=3): HashSet[Vertex[Graph.D,Graph.M]] =
+proc fasOptimizedEadesLinSmith*(graph: Graph, passes=3): HashSet[Edge[Graph.D,Graph.M]] =
   ## Use ELS to generate ordering and then optimize it by making relocation passes
   ## to shift vertices to optimal gap. AKA iterative local search.
-  graph.vertices.fasEadesLinSmith(passes)
+  graph.vertices.fasOptimizedEadesLinSmith(passes)
 
 proc test(constraint: ConnectivityConstraint, g: Graph, fas: HashSet[Edge]): bool =
   ## Test if graph satisfies constraint where given FAS applied
@@ -492,14 +492,6 @@ proc test[D, M](
 proc bruteVertexOrdering[T: Vertex](
     s: SCC[T.D, T.M], constraints: set[ConnectivityConstraint] = {}
 ): Option[VertexOrdering[T]] =
-  ## Brute force MFAS through left to right vertex ordering for all vertex O(V!)
-  ## orderings, enumerate back edges.
-  ##
-  ## Excepting singletons it is invariant that a SCC has at least one cycle. Any
-  ## ordering shall have at least one back edge and meet the weakly connected
-  ## criteria since any vertex is reachable from any other by definition.
-  ##
-  ## Note weakly connected does not account for edge direction.
   if s.singleton(): # base case
     return some(s.vertices.initVertexOrdering[:T]())
   var
@@ -538,14 +530,22 @@ proc bruteVertexOrdering[T: Vertex](
   if minimum < int.high: return some(bestOrder)  # FAS matching constraints found
   else: return none(VertexOrdering[T]) # No FAS located
 
-proc fasBruteVertexOrdering(
+proc fasBruteVertexOrdering*(
     scc: SCC, constraints: set[ConnectivityConstraint] = {}
 ): Option[HashSet[Edge[SCC.D,SCC.M]]] =
+  ## Brute force MFAS through left to right vertex ordering for all vertex O(V!)
+  ## orderings, enumerate back edges.
+  ##
+  ## Excepting singletons it is invariant that a SCC has at least one cycle. Any
+  ## ordering shall have at least one back edge and meet the weakly connected
+  ## criteria since any vertex is reachable from any other by definition.
+  ##
+  ## Note weakly connected does not account for edge direction.
   var order = scc.bruteVertexOrdering[:Vertex[SCC.D,SCC.M]](constraints)
   if order.issome(): result = order.get().fas.some()
   else: result = none[HashSet[Edge[SCC.D,SCC.M]]]()
 
-proc fasBruteEdgeset(
+proc fasBruteEdgeset*(
     s: SCC, constraints: set[ConnectivityConstraint] = {}
 ): Option[HashSet[Edge[SCC.D,SCC.M]]] =
   ## Brute force MFAS through trying edge set combinations O(2^E).
@@ -597,7 +597,7 @@ proc pickFasAlgorithm(s: SCC): FasStrategy =
   if N > JUST_ELS: return fsEls
   return fsElsReorder
 
-proc fas(g: Graph): HashSet[Edge[Graph.D,Graph.M]] =
+proc fas*(g: Graph): HashSet[Edge[Graph.D,Graph.M]] =
   ## Derive a close to or minimal feedback arc set (FAS)
   ##
   ## This is done by finding a graphs condensation, iterating over the strongly
