@@ -5,7 +5,7 @@
 ##     go into $reporoot/docs and include an index.html file
 ## - rmGhPage: Remove github pages page
 ## - ghPage: Query github page status
-import std/[pegs,strbasics,strformat, json,tables]
+import std/[pegs,strbasics,strformat, json,tables,sequtils]
 
 var docfolder = "docs" # must be this for ghpages
 type Shellcmd = distinct string
@@ -27,12 +27,17 @@ task mkdocs, "Generate HTML documentation":
     assert v.find(p) > -1, &"Value --{k}:{v} does not match validator {p}"
     docarg &= &" --{k}:{v}"
 
-  exec &"rm -rf {docfolder}"
-  exec(&"fd -g *.md | xargs -r echo md2html {docarg} --index:only")
-  exec(&"fd -g *.md | xargs -r nim md2html {docarg} --index:off")
-  exec(&"nim doc {docarg} --index:only --project src/*.nim")
-  exec(&"nim doc {docarg} --index:on --project src/*.nim")
-  exec &"mv {docfolder}/{{the,}}index.html"
+  let cmds = @[
+    &"rm -rf {docfolder}", # start fresh
+    &"fd -g *.md | xargs -r echo md2html {docarg} --index:only", # idx
+    &"fd -g *.md | xargs -r nim md2html {docarg} --index:off", # html
+    &"nim doc {docarg} --index:only --project src/*.nim", # idx
+    &"nim doc {docarg} --index:off --project src/*.nim", # html
+    # ghpages needs an index.html, all doc pages (hardcode) link to theindex.html
+    &"cd {docfolder}; ln -s theindex.html index.html"]
+  for c in cmds: c.exec
+    
+  #exec &"mv {docfolder}/{{the,}}index.html" # html still points to theindex.html
 
 task chkcompat, "Test against other nim versions":
   # set requires to the earliest version you want to test back to
