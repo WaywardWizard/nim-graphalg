@@ -1,6 +1,11 @@
 ## Multiple elements of tsame value not accepted
 import std/[lists, tables]
 type IndexedList*[L: SomeLinkedList] = object
+  ## Linked list with O(1) lookup instead of O(N). Useful when you have an array
+  ## of elements and you want to remove items at a location and preserve ordering
+  ## or add. Especially when you need to find and remove elements
+  ##
+  ## An alternative is an array with holes which can be scanned over
   list: L
   map: Table[L.T, typeof(default(L).head)]
 
