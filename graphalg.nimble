@@ -13,15 +13,17 @@ requires "nim >= 2.2.6"
 
 requires "fusion >= 1.2"
 
+import std/[pegs,strbasics,strformat, json]
+
+var docfolder = "docs" # must be this for ghpages
 task docs, "Generate HTML documentation":
 
-  exec("fd -g *.md | xargs -r echo md2html --index:only --outdir:htmldocs")
-  exec("fd -g *.md | xargs -r nim md2html --index:on --outdir:htmldocs")
+  exec(&"fd -g *.md | xargs -r echo md2html --index:only --outdir:{docfolder}")
+  exec(&"fd -g *.md | xargs -r nim md2html --index:on --outdir:{docfolder}")
 
-  exec("nim doc --outdir:htmldocs --index:only --project src/*.nim")
-  exec("nim doc --outdir:htmldocs --index:on --project src/*.nim")
+  exec(&"nim doc --outdir:{docfolder} --index:only --project src/*.nim")
+  exec(&"nim doc --outdir:{docfolder} --index:on --project src/*.nim")
 
-import std/[pegs,strbasics,strformat]
 task nimversion, "Test against other nim versions":
   # set requires to the earliest version you want to test back to
   var versions: seq[string]
@@ -46,5 +48,13 @@ task nimversion, "Test against other nim versions":
       break
 
   echo "Best version ", bestVersion
+
+task ghpage, "Setup documentation on github pages":
+  exec &"gh api repos/{{owner}}/{{repo}}/pages -f build_type=legacy -f 'source[branch]=master' -f 'source[path]=/{docfolder}'"
+task rmghpage, "Remove github page":
+  exec "gh api --method DELETE repos/{owner}/{repo}/pages"
+task qghpage, "Remove github page":
+  exec "gh api repos/{owner}/{repo}/pages"
+
 
 requires "combinatronics >= 1.0.0"
