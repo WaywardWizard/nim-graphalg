@@ -56,8 +56,12 @@
     <ul class="simple simple-toc" id="toc-list">
   <ul class="simple"><li><a class="reference" id="finding-feedback-arc-sets-computational-budget_toc" href="#finding-feedback-arc-sets-computational-budget">Computational budget</a></li>
 </ul><li><a class="reference" id="graph-algorithms_toc" href="#graph-algorithms">Graph Algorithms</a></li>
+<li><a class="reference" id="strongly-connected-component_toc" href="#strongly-connected-component">Strongly Connected Component</a></li>
 <li><a class="reference" id="feedback-arc-sets_toc" href="#feedback-arc-sets">Feedback Arc Sets</a></li>
-<li><a class="reference" id="additions_toc" href="#additions">Additions</a></li>
+<ul class="simple"><li><a class="reference" id="feedback-arc-sets-algorithm_toc" href="#feedback-arc-sets-algorithm">Algorithm</a></li>
+</ul><li><a class="reference" id="condensation_toc" href="#condensation">Condensation</a></li>
+<li><a class="reference" id="basis_toc" href="#basis">Basis</a></li>
+<li><a class="reference" id="finding-vertices_toc" href="#finding-vertices">Finding Vertices</a></li>
 <li><a class="reference" id="finding-feedback-arc-sets_toc" href="#finding-feedback-arc-sets">Finding feedback arc sets</a></li>
 <li>
   <a class="reference reference-toplevel" href="#6" id="56">Imports</a>
@@ -69,8 +73,8 @@
       <li><a class="reference" href="#Direction" title="Direction = enum
   dOutbound, dInbound, dAll">Direction</a></li>
 <li><a class="reference" href="#Edge" title="Edge[D; M] = ref object
-  outbound*, inbound*: Vertex[D, M]
-  meta*: M">Edge</a></li>
+  outbound*, inbound*: Vertex[D, M] ## vertex arc exits and enters
+  meta*: M                   ## metadata, weights, applicability criteria etc">Edge</a></li>
 <li><a class="reference" href="#EdgeFilter" title="EdgeFilter[E] = proc (e: E): bool {.closure, nosideeffect, gcsafe.}">EdgeFilter</a></li>
 <li><a class="reference" href="#Graph" title="Graph[D; M] = ref object
   vertices*: OrderedSet[Vertex[D, M]]">Graph</a></li>
@@ -154,8 +158,8 @@
 </ul>
 <ul class="simple nested-toc-section">fasOptimizedEadesLinSmith
   <li><a class="reference" href="#fasOptimizedEadesLinSmith%2CGraph%2Cint" title="fasOptimizedEadesLinSmith(graph: Graph; passes = 3): HashSet[
-    Vertex[Graph.D, Graph.M]]">fasOptimizedEadesLinSmith(graph: Graph; passes = 3): HashSet[
-    Vertex[Graph.D, Graph.M]]</a></li>
+    Edge[Graph.D, Graph.M]]">fasOptimizedEadesLinSmith(graph: Graph; passes = 3): HashSet[
+    Edge[Graph.D, Graph.M]]</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">flux
@@ -258,9 +262,7 @@
 
 </ul>
 <ul class="simple nested-toc-section">sccs
-  <li><a class="reference" href="#sccs.i%2CGraph%2Ctypeof%28none%5Bproc%20%28e%3A%20Edge%5BGraph.D%2C%20Graph.M%5D%29%3A%20bool%20%7B.noSideEffect%2C%20gcsafe.%7D%5D%28%29%29" title="sccs(g: Graph; pruned = none[proc (e: Edge[Graph.D, Graph.M]): bool {.
-    noSideEffect, gcsafe.}]()): SCC[Graph.D, Graph.M]">sccs(g: Graph; pruned = none[proc (e: Edge[Graph.D, Graph.M]): bool {.
-    noSideEffect, gcsafe.}]()): SCC[Graph.D, Graph.M]</a></li>
+  <li><a class="reference" href="#sccs.i%2CGraph" title="sccs(g: Graph): SCC[Graph.D, Graph.M]">sccs(g: Graph): SCC[Graph.D, Graph.M]</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">sinks
@@ -297,15 +299,21 @@
 <h1><a class="toc-backref" id="graph-algorithms" href="#graph-algorithms">Graph Algorithms</a></h1><table class="docinfo" frame="void" rules="none"><col class="docinfo-name" /><col class="docinfo-content" /><tbody valign="top"><tr><th class="docinfo-name">Author:</th><td>Ben Tomlin</td></tr>
 </tbody></table><p>Graph structure with useful algorithm implementations.</p>
 <p>Intended as a lower level implementation with enough detail exposed to be used for broad range of purposes. For example, walkDfs lists the traversed in DFS, which can be useful for algorithms that act at backtrack.</p>
-<p>Intended to be performant at scale but not use case optimized. If you want full optimization its best to implement your own fully specific to your use case using more performant structures like packed arrays.</p>
+<p>Intended to be performant at scale but not use case optimized. If you want full optimization its best to implement your own fully specific to your use case using more performant structures like packed arrays. Memory is traded for computation - particularly to bound ccmplexity</p>
 <p>Edge and Vertex hold generic types to be suited for any purpose.</p>
 
-<h1><a class="toc-backref" id="feedback-arc-sets" href="#feedback-arc-sets">Feedback Arc Sets</a></h1><p>Tarjans SCC provides a set per SCC. A condensed graph is acyclic by definition A graph can have its edges pruned to a weakly connected DAG by</p>
-<ol class="simple"><li>Condense graph with Tarjans SCC</li>
-<li>Prune or deactivate backedges of all SCC</li>
-</ol>
+<h1><a class="toc-backref" id="strongly-connected-component" href="#strongly-connected-component">Strongly Connected Component</a></h1><p>Set of vertices, for which any vertex is reachable from any other by some path. A graph has a unique set of SCCs. All feedback arcs in a graph exist in SCCs.</p>
+<p>A single vertex is considered an SCC (provided any vertex that can reach to it cannot be reached from it). Such a vertex may have a self edge.</p>
 
-<h1><a class="toc-backref" id="additions" href="#additions">Additions</a></h1><p>Consider mapping vertices</p>
+<h1><a class="toc-backref" id="feedback-arc-sets" href="#feedback-arc-sets">Feedback Arc Sets</a></h1><p>Set of edges that form cycles in a directed graph. Removing such edges will make the graph acyclic</p>
+
+<h2><a class="toc-backref" id="feedback-arc-sets-algorithm" href="#feedback-arc-sets-algorithm">Algorithm</a></h2><p>Find all SCC. Find FAS per SCC. The union of all SCCs FAS is the graph FAS.</p>
+
+<h1><a class="toc-backref" id="condensation" href="#condensation">Condensation</a></h1><p>A graph can be collapsed into its SCCs. A vertex per SCC, with edges between SCCs as per the edges between their individual vertices. A condensation is useful for topologically sorting. By definition condensed graphs are acyclic.</p>
+
+<h1><a class="toc-backref" id="basis" href="#basis">Basis</a></h1><p>Set of vertices in a graph that from which all other vertices may be reached but no other basis vertex may be reached.</p>
+
+<h1><a class="toc-backref" id="finding-vertices" href="#finding-vertices">Finding Vertices</a></h1><p>Lookup vertices with a label, or with a data value. No distinct two vertices with the same label and data may exist.</p>
 
 <h1><a class="toc-backref" id="finding-feedback-arc-sets" href="#finding-feedback-arc-sets">Finding feedback arc sets</a></h1><p>Acyclic: No backedges SCC: Every vertex within may reach every other vertex, and be reached from any other Strongly Connected: As per SCC Weakly connected: There exists a vertex from which every other may be reached Feedback Arc Set: A set of edges which if removed will make the graph acyclic MFAS: Minimum possible set of edges to make graph acyclic</p>
 <p>Finding the MFAS is NP-Hard. To get a good FAS, where this means that the FAS cardinality is close to that of MFAS use Eades-Lin-Smith algorithm</p>
@@ -338,20 +346,20 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L63" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L63" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L82" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L82" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 <div id="Edge">
   <dt><pre><a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">;</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Keyword">ref</span> <span class="Keyword">object</span>
-  <span class="Identifier">outbound</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">inbound</span><span class="Operator">*</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span>
-  <span class="Identifier">meta</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">M</span></pre></dt>
+  <span class="Identifier">outbound</span><span class="Operator">*</span><span class="Other">,</span> <span class="Identifier">inbound</span><span class="Operator">*</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Comment">## vertex arc exits and enters</span>
+  <span class="Identifier">meta</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">M</span>                   <span class="Comment">## metadata, weights, applicability criteria etc</span></pre></dt>
   <dd>
     
-    edges to a vertex are stored both on the source and sink vertex
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L36" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L36" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    edges to a vertex are stored both on the source and sink vertex. 
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L55" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L55" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -360,8 +368,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L100" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L100" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L119" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L119" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -373,8 +381,8 @@
     <p>Stores analysis and computation results</p>
 <p>The data types D and M should be hashable and lightweight or ref</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L75" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L75" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L94" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L94" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -383,8 +391,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L72" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L72" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L91" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L91" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -393,8 +401,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L69" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L69" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L88" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L88" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -407,8 +415,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L41" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L41" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L60" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L60" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -417,8 +425,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L102" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L102" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L121" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L121" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -470,8 +478,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L133" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L133" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L152" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L152" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -480,8 +488,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L111" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L111" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L130" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L130" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -490,8 +498,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L139" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L139" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L158" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L158" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -500,8 +508,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L127" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L127" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L146" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L146" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -513,8 +521,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L149" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L149" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L168" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L168" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -530,8 +538,8 @@
 <p>Exception for basis vertices in graphs with multiple vertices of same label</p>
 <p>Its assumed the basis supplied is valid (all vertices in graph reachable via some basis vertex, no basis vertex reachable from any other)</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L731" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L731" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L744" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L744" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -546,8 +554,8 @@
 <p>Find all SCCs in graph. Generate a vertex for each. For all SCC outbound edges of SCC internal vertices, lookup the SCC they connect with. Given the two connected SCCs, add an edge between their SCC vertices.</p>
 <p>SCCs made of single vertices will have self edges if those vertices do. SCCs made of multiple vertices will have a self edge for every vertex that has a self edge</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L658" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L658" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L671" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L671" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -559,8 +567,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L204" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L204" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L223" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L223" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -572,8 +580,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L198" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L198" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L217" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L217" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -585,8 +593,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L209" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L209" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L228" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L228" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -672,7 +680,7 @@
 <div id="fasOptimizedEadesLinSmith-procs-all">
   <div id="fasOptimizedEadesLinSmith,Graph,int">
   <dt><pre><span class="Keyword">proc</span> <a href="#fasOptimizedEadesLinSmith%2CGraph%2Cint"><span class="Identifier">fasOptimizedEadesLinSmith</span></a><span class="Other">(</span><span class="Identifier">graph</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">;</span> <span class="Identifier">passes</span> <span class="Other">=</span> <span class="DecNumber">3</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">HashSet</span><span class="Other">[</span>
-    <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span></pre></dt>
+    <a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span></pre></dt>
   <dd>
     
     Use ELS to generate ordering and then optimize it by making relocation passes to shift vertices to optimal gap. AKA iterative local search.
@@ -691,8 +699,8 @@
   <dd>
     
     Find {in,out}degree efilter: when true filter the edge (the edge wont count toward the flux)
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L395" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L395" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L414" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L414" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -704,8 +712,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L450" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L450" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L469" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L469" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -717,8 +725,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L183" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L183" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L202" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L202" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -727,8 +735,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L153" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L153" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L172" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L172" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -741,8 +749,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L145" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L145" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L164" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L164" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -754,8 +762,8 @@
   <dd>
     
     SCC with no vertices containing edges to or from an external vertex, may be multiple vertices
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L464" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L464" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L483" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L483" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -764,8 +772,8 @@
   <dd>
     
     Defined as vertex with no incoming or outgoing edges
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L460" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L460" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L479" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L479" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -778,8 +786,8 @@
   <dd>
     
     Lookup vertex by label break tie with data
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L435" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L435" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L454" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L454" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -790,8 +798,8 @@
     <p>Find a vertex in graph by data, tiebreak with label</p>
 <p>Given a data value find the vertex associated with that data, Supply a label to differentiate vertices with the same data where necessary.</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L414" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L414" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L433" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L433" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -803,8 +811,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L115" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L115" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L134" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L134" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -816,8 +824,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L751" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L751" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L764" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L764" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -829,8 +837,8 @@
   <dd>
     
     Single vertex that may or may not connect to other sccs
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L475" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L475" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L494" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L494" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -842,8 +850,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L457" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L457" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L476" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L476" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -855,8 +863,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L454" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L454" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L473" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L473" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -878,8 +886,8 @@
 <p>Basis is defined as a set of vertices, from which all other vertices are reachable. A basis in minimal, but not unique (consider a cycle). Minimal means that no basis vertex may be reachable from any other by definition.</p>
 <p>A set of SCC are unique to a graph.</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L758" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L758" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L771" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L771" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -891,8 +899,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L374" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L374" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L393" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L393" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -901,8 +909,8 @@
   <dd>
     
     Assumes basis is valid (all vertices reachable from basis, no basis vertex reachable from any other)
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L388" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L388" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L407" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L407" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -920,8 +928,8 @@
 <p>Visitation order dependant on order of the vertices iterable. A -&gt; B -&gt; C with iterable in order &quot;ABC&quot; visits in order &quot;ABC&quot;. &quot;BAC&quot; in order &quot;BCA&quot;.</p>
 <p>Visitation order for A-&gt;B-&gt;{C,D} is A, B, D, C</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L328" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L328" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L347" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L347" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -933,8 +941,8 @@
   <dd>
     
     Assumes basis is valid (all vertices reachable from basis, no basis vertex reachable from any other)
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L362" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L362" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L381" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L381" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -946,8 +954,8 @@
   <dd>
     
     All edges in graph. Note that outbound edge A-&gt;B will be outbound for A, and inbound for B. All edges are outbound for some vertex and vice versa. dAll then will iterate over the full set of edges twice
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L228" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L228" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L247" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L247" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -957,8 +965,8 @@
   <dd>
     
     Iterate edges
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L213" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L213" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L232" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L232" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -970,8 +978,8 @@
   <dd>
     
     Yield vertices that connect to none other than themselves
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L724" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L724" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L737" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L737" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -983,8 +991,8 @@
   <dd>
     
     Vertices in graph in an unspecified order
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L193" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L193" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L212" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L212" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -993,8 +1001,8 @@
   <dd>
     
     Vertices in SCC in an unspecified order
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L189" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L189" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L208" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L208" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1006,22 +1014,21 @@
   <dd>
     
     Neighbours reachable from, that reach to vertex or both
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L236" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L236" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L255" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L255" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 
 </div>
 <div id="sccs-iterators-all">
-  <div id="sccs.i,Graph,typeof(none[proc (e: Edge[Graph.D, Graph.M]): bool {.noSideEffect, gcsafe.}]())">
-  <dt><pre><span class="Keyword">iterator</span> <a href="#sccs.i%2CGraph%2Ctypeof%28none%5Bproc%20%28e%3A%20Edge%5BGraph.D%2C%20Graph.M%5D%29%3A%20bool%20%7B.noSideEffect%2C%20gcsafe.%7D%5D%28%29%29"><span class="Identifier">sccs</span></a><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">;</span> <span class="Identifier">pruned</span> <span class="Other">=</span> <span class="Identifier">none</span><span class="Other">[</span><span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">e</span><span class="Other">:</span> <a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.
-    <span class="Identifier">noSideEffect</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">gcsafe</span></span>.}<span class="Other">]</span><span class="Other">(</span><span class="Other">)</span><span class="Other">)</span><span class="Other">:</span> <a href="#SCC"><span class="Identifier">SCC</span></a><span class="Other">[</span><span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">M</span><span class="Other">]</span></pre></dt>
+  <div id="sccs.i,Graph">
+  <dt><pre><span class="Keyword">iterator</span> <a href="#sccs.i%2CGraph"><span class="Identifier">sccs</span></a><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#SCC"><span class="Identifier">SCC</span></a><span class="Other">[</span><span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">M</span><span class="Other">]</span></pre></dt>
   <dd>
     
-    TODO get efilter and scc caching working together
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L615" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L615" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    Iterate SCC of graph, return cached result if necessary
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L634" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L634" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1033,8 +1040,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L718" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L718" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L731" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L731" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1048,8 +1055,8 @@
     <p>Sources are all nodes that may not be reached from another (no incoming edges) and that have edges out to another node.</p>
 <p>Vertices with self edges  only are not considered sources</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L708" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L708" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L721" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L721" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1062,8 +1069,8 @@
   <dd>
     
     Topologically sort DAG.
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L802" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L802" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L815" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L815" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1079,7 +1086,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-12 10:25:21 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-12 11:01:28 UTC</small>
       </div>
     </div>
   </div>

@@ -1,72 +1,76 @@
 nimTitle	graphalg	graphalg.html	module src/graphalg		0
-nim	Edge	graphalg.html#Edge	type Edge		36
-nim	Vertex	graphalg.html#Vertex	type Vertex		41
-nim	dOutbound	graphalg.html#dOutbound	Direction.dOutbound		63
-nim	dInbound	graphalg.html#dInbound	Direction.dInbound		63
-nim	dAll	graphalg.html#dAll	Direction.dAll		63
-nim	Direction	graphalg.html#Direction	enum Direction		63
-nim	SCC	graphalg.html#SCC	type SCC		69
-nim	NoData	graphalg.html#NoData	object NoData		72
-nim	Graph	graphalg.html#Graph	type Graph		75
-nim	EdgeFilter	graphalg.html#EdgeFilter	type EdgeFilter		100
-nim	VertexFilter	graphalg.html#VertexFilter	type VertexFilter		102
-nim	`$`	graphalg.html#$,Graph	proc `$`(g: Graph): string		111
-nim	repr	graphalg.html#repr,Vertex	proc repr(v: Vertex): string		115
-nim	`$`	graphalg.html#$,Vertex	proc `$`(v: Vertex): string		127
-nim	`$`	graphalg.html#$,Edge	proc `$`(e: Edge; revArrow = false): string		133
-nim	`$`	graphalg.html#$,SCC	proc `$`(s: SCC): string		139
-nim	initVertex	graphalg.html#initVertex,string,D	proc initVertex[D, M = NoData](label: string; data: D = default(D)): Vertex[D, NoData]		145
-nim	add	graphalg.html#add,Graph[D,M],Vertex[D,M]	proc add[D, M](g: Graph[D, M]; v: Vertex[D, M])		149
-nim	initGraph	graphalg.html#initGraph,openArray[Vertex[D,M]]	proc initGraph[D, M](v: openArray[Vertex[D, M]]): Graph[D, M]		153
-nim	initGraph	graphalg.html#initGraph	proc initGraph[D, M](v: iterator (): Vertex[D, M]): Graph[D, M]		183
-nim	items	graphalg.html#items.i,SCC	iterator items(x: SCC): Vertex[SCC.D, SCC.M]		189
-nim	items	graphalg.html#items.i,Graph	iterator items(g: Graph): Vertex[Graph.D, Graph.M]		193
-nim	connectTo	graphalg.html#connectTo,Vertex[D,M],Vertex[D,M],M	proc connectTo[D, M](vfrom, vto: Vertex[D, M]; meta: M = default(M))		198
-nim	connectFrom	graphalg.html#connectFrom,Vertex[D,M],Vertex[D,M],M	proc connectFrom[D, M](vto, vfrom: Vertex[D, M]; meta: M = default(M))		204
-nim	connectToSelf	graphalg.html#connectToSelf,Vertex,typeof(default[Vertex.M](Vertex.M))	proc connectToSelf(x: Vertex; meta: Vertex.M = default[Vertex.M](Vertex.M))		209
-nim	edges	graphalg.html#edges.i,Vertex[D,M],Direction	iterator edges[D, M](v: Vertex[D, M]; direction: Direction = dOutbound): Edge[D, M]		213
-nim	edges	graphalg.html#edges.i,Graph[D,M]	iterator edges[D, M](g: Graph[D, M]; direction = dOutbound): Edge[D, M]		228
-nim	neighbours	graphalg.html#neighbours.i,Vertex,Direction	iterator neighbours(v: Vertex; d: Direction = dOutbound): Vertex		236
-nim	dfs	graphalg.html#dfs.i,Vertex[D,M],Option[EdgeFilter[Edge[D,M]]],Option[VertexFilter[Vertex[D,M]]],bool	iterator dfs[D, M](anchor: Vertex[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[\n    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[\n    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]		328
-nim	dfs	graphalg.html#dfs.i,Graph[D,M],Option[EdgeFilter[Edge[D,M]]],Option[VertexFilter[Vertex[D,M]]],bool	iterator dfs[D, M](graph: Graph[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[\n    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[\n    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]		362
-nim	bfs	graphalg.html#bfs.i,Vertex	iterator bfs(anchor: Vertex): Vertex		374
-nim	bfs	graphalg.html#bfs.i,Graph	iterator bfs(graph: Graph): Vertex[Graph.D, Graph.M]		388
-nim	flux	graphalg.html#flux,Vertex[D,M],typeof(none[proc (x: Edge[D, M]): bool {.closure, noSideEffect, gcsafe.}]()),bool	proc flux[D, M](v: Vertex[D, M]; efilter = none[\n    proc (x: Edge[D, M]): bool {.closure, noSideEffect, gcsafe.}]();\n           countSelfEdges: bool = true): tuple[i, o: int]		395
-nim	lookup	graphalg.html#lookup,Graph[D,M],D	proc lookup[D, M](g: Graph[D, M]; d: D; label = none[string]()): Vertex[D, M]		414
-nim	lookup	graphalg.html#lookup,Graph,string,typeof(none[Graph.D]())	proc lookup(g: Graph; label: string; data = none[Graph.D]()): Vertex[Graph.D, Graph.M]		435
-nim	fluxd	graphalg.html#fluxd,Vertex	proc fluxd(v: Vertex): int		450
-nim	source	graphalg.html#source,Vertex	proc source(v: Vertex): bool		454
-nim	sink	graphalg.html#sink,Vertex	proc sink(v: Vertex): bool		457
-nim	isolated	graphalg.html#isolated,Vertex	proc isolated(v: Vertex): bool		460
-nim	isolated	graphalg.html#isolated,SCC	proc isolated(scc: SCC): bool		464
-nim	singleton	graphalg.html#singleton,SCC	proc singleton(scc: SCC): bool		475
-nim	sccs	graphalg.html#sccs.i,Graph,typeof(none[proc (e: Edge[Graph.D, Graph.M]): bool {.noSideEffect, gcsafe.}]())	iterator sccs(g: Graph; pruned = none[proc (e: Edge[Graph.D, Graph.M]): bool {.\n    noSideEffect, gcsafe.}]()): SCC[Graph.D, Graph.M]		615
-nim	condensation	graphalg.html#condensation,Graph[D,M]	proc condensation[D, M](g: Graph[D, M]): Graph[SCC[D, M], NoData]		658
-nim	sources	graphalg.html#sources.i,Graph	iterator sources(g: Graph): Vertex[Graph.D, Graph.M]		708
-nim	sinks	graphalg.html#sinks.i,Graph	iterator sinks(g: Graph): Vertex[Graph.D, Graph.M]		718
-nim	isolated	graphalg.html#isolated.i,Graph	iterator isolated(g: Graph): Vertex[Graph.D, Graph.M]		724
-nim	basis=	graphalg.html#basis=,Graph,openArray[string]	proc basis=(g: Graph; vlabel: openArray[string])		731
-nim	resetBasis	graphalg.html#resetBasis,Graph	proc resetBasis(g: Graph)		751
-nim	basis	graphalg.html#basis.i,Graph	iterator basis(g: Graph): Vertex[Graph.D, Graph.M]		758
+nim	Edge	graphalg.html#Edge	type Edge		55
+nim	Vertex	graphalg.html#Vertex	type Vertex		60
+nim	dOutbound	graphalg.html#dOutbound	Direction.dOutbound		82
+nim	dInbound	graphalg.html#dInbound	Direction.dInbound		82
+nim	dAll	graphalg.html#dAll	Direction.dAll		82
+nim	Direction	graphalg.html#Direction	enum Direction		82
+nim	SCC	graphalg.html#SCC	type SCC		88
+nim	NoData	graphalg.html#NoData	object NoData		91
+nim	Graph	graphalg.html#Graph	type Graph		94
+nim	EdgeFilter	graphalg.html#EdgeFilter	type EdgeFilter		119
+nim	VertexFilter	graphalg.html#VertexFilter	type VertexFilter		121
+nim	`$`	graphalg.html#$,Graph	proc `$`(g: Graph): string		130
+nim	repr	graphalg.html#repr,Vertex	proc repr(v: Vertex): string		134
+nim	`$`	graphalg.html#$,Vertex	proc `$`(v: Vertex): string		146
+nim	`$`	graphalg.html#$,Edge	proc `$`(e: Edge; revArrow = false): string		152
+nim	`$`	graphalg.html#$,SCC	proc `$`(s: SCC): string		158
+nim	initVertex	graphalg.html#initVertex,string,D	proc initVertex[D, M = NoData](label: string; data: D = default(D)): Vertex[D, NoData]		164
+nim	add	graphalg.html#add,Graph[D,M],Vertex[D,M]	proc add[D, M](g: Graph[D, M]; v: Vertex[D, M])		168
+nim	initGraph	graphalg.html#initGraph,openArray[Vertex[D,M]]	proc initGraph[D, M](v: openArray[Vertex[D, M]]): Graph[D, M]		172
+nim	initGraph	graphalg.html#initGraph	proc initGraph[D, M](v: iterator (): Vertex[D, M]): Graph[D, M]		202
+nim	items	graphalg.html#items.i,SCC	iterator items(x: SCC): Vertex[SCC.D, SCC.M]		208
+nim	items	graphalg.html#items.i,Graph	iterator items(g: Graph): Vertex[Graph.D, Graph.M]		212
+nim	connectTo	graphalg.html#connectTo,Vertex[D,M],Vertex[D,M],M	proc connectTo[D, M](vfrom, vto: Vertex[D, M]; meta: M = default(M))		217
+nim	connectFrom	graphalg.html#connectFrom,Vertex[D,M],Vertex[D,M],M	proc connectFrom[D, M](vto, vfrom: Vertex[D, M]; meta: M = default(M))		223
+nim	connectToSelf	graphalg.html#connectToSelf,Vertex,typeof(default[Vertex.M](Vertex.M))	proc connectToSelf(x: Vertex; meta: Vertex.M = default[Vertex.M](Vertex.M))		228
+nim	edges	graphalg.html#edges.i,Vertex[D,M],Direction	iterator edges[D, M](v: Vertex[D, M]; direction: Direction = dOutbound): Edge[D, M]		232
+nim	edges	graphalg.html#edges.i,Graph[D,M]	iterator edges[D, M](g: Graph[D, M]; direction = dOutbound): Edge[D, M]		247
+nim	neighbours	graphalg.html#neighbours.i,Vertex,Direction	iterator neighbours(v: Vertex; d: Direction = dOutbound): Vertex		255
+nim	dfs	graphalg.html#dfs.i,Vertex[D,M],Option[EdgeFilter[Edge[D,M]]],Option[VertexFilter[Vertex[D,M]]],bool	iterator dfs[D, M](anchor: Vertex[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[\n    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[\n    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]		347
+nim	dfs	graphalg.html#dfs.i,Graph[D,M],Option[EdgeFilter[Edge[D,M]]],Option[VertexFilter[Vertex[D,M]]],bool	iterator dfs[D, M](graph: Graph[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[\n    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[\n    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]		381
+nim	bfs	graphalg.html#bfs.i,Vertex	iterator bfs(anchor: Vertex): Vertex		393
+nim	bfs	graphalg.html#bfs.i,Graph	iterator bfs(graph: Graph): Vertex[Graph.D, Graph.M]		407
+nim	flux	graphalg.html#flux,Vertex[D,M],typeof(none[proc (x: Edge[D, M]): bool {.closure, noSideEffect, gcsafe.}]()),bool	proc flux[D, M](v: Vertex[D, M]; efilter = none[\n    proc (x: Edge[D, M]): bool {.closure, noSideEffect, gcsafe.}]();\n           countSelfEdges: bool = true): tuple[i, o: int]		414
+nim	lookup	graphalg.html#lookup,Graph[D,M],D	proc lookup[D, M](g: Graph[D, M]; d: D; label = none[string]()): Vertex[D, M]		433
+nim	lookup	graphalg.html#lookup,Graph,string,typeof(none[Graph.D]())	proc lookup(g: Graph; label: string; data = none[Graph.D]()): Vertex[Graph.D, Graph.M]		454
+nim	fluxd	graphalg.html#fluxd,Vertex	proc fluxd(v: Vertex): int		469
+nim	source	graphalg.html#source,Vertex	proc source(v: Vertex): bool		473
+nim	sink	graphalg.html#sink,Vertex	proc sink(v: Vertex): bool		476
+nim	isolated	graphalg.html#isolated,Vertex	proc isolated(v: Vertex): bool		479
+nim	isolated	graphalg.html#isolated,SCC	proc isolated(scc: SCC): bool		483
+nim	singleton	graphalg.html#singleton,SCC	proc singleton(scc: SCC): bool		494
+nim	sccs	graphalg.html#sccs.i,Graph	iterator sccs(g: Graph): SCC[Graph.D, Graph.M]		634
+nim	condensation	graphalg.html#condensation,Graph[D,M]	proc condensation[D, M](g: Graph[D, M]): Graph[SCC[D, M], NoData]		671
+nim	sources	graphalg.html#sources.i,Graph	iterator sources(g: Graph): Vertex[Graph.D, Graph.M]		721
+nim	sinks	graphalg.html#sinks.i,Graph	iterator sinks(g: Graph): Vertex[Graph.D, Graph.M]		731
+nim	isolated	graphalg.html#isolated.i,Graph	iterator isolated(g: Graph): Vertex[Graph.D, Graph.M]		737
+nim	basis=	graphalg.html#basis=,Graph,openArray[string]	proc basis=(g: Graph; vlabel: openArray[string])		744
+nim	resetBasis	graphalg.html#resetBasis,Graph	proc resetBasis(g: Graph)		764
+nim	basis	graphalg.html#basis.i,Graph	iterator basis(g: Graph): Vertex[Graph.D, Graph.M]		771
 nim	BRUTE_EDGES	graphalg.html#BRUTE_EDGES	const BRUTE_EDGES		61
 nim	BRUTE_VERTICES	graphalg.html#BRUTE_VERTICES	const BRUTE_VERTICES		62
 nim	JUST_ELS	graphalg.html#JUST_ELS	const JUST_ELS		63
 nim	fasEadesLinSmith	graphalg.html#fasEadesLinSmith,Graph	proc fasEadesLinSmith(graph: Graph): HashSet[Edge[Graph.D, Graph.M]]		306
-nim	fasOptimizedEadesLinSmith	graphalg.html#fasOptimizedEadesLinSmith,Graph,int	proc fasOptimizedEadesLinSmith(graph: Graph; passes = 3): HashSet[\n    Vertex[Graph.D, Graph.M]]		415
+nim	fasOptimizedEadesLinSmith	graphalg.html#fasOptimizedEadesLinSmith,Graph,int	proc fasOptimizedEadesLinSmith(graph: Graph; passes = 3): HashSet[\n    Edge[Graph.D, Graph.M]]		415
 nim	fasBruteVertexOrdering	graphalg.html#fasBruteVertexOrdering,SCC,set[ConnectivityConstraint]	proc fasBruteVertexOrdering(scc: SCC; constraints: set[ConnectivityConstraint] = {}): Option[\n    HashSet[Edge[SCC.D, SCC.M]]]		533
 nim	fasBruteEdgeset	graphalg.html#fasBruteEdgeset,SCC,set[ConnectivityConstraint]	proc fasBruteEdgeset(s: SCC; constraints: set[ConnectivityConstraint] = {}): Option[\n    HashSet[Edge[SCC.D, SCC.M]]]		548
 nim	fas	graphalg.html#fas,Graph	proc fas(g: Graph): HashSet[Edge[Graph.D, Graph.M]]		600
-nim	toposort	graphalg.html#toposort.i,Graph[D,M],HashSet[Edge[D,M]],bool	iterator toposort[D, M](g: Graph[D, M];\n               fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]]();\n               reverse: bool = false): Vertex[D, M]		802
-nimgrp	lookup	graphalg.html#lookup-procs-all	proc		414
-nimgrp	$	graphalg.html#$-procs-all	proc		111
-nimgrp	isolated	graphalg.html#isolated-procs-all	proc		460
-nimgrp	initgraph	graphalg.html#initGraph-procs-all	proc		153
-nimgrp	items	graphalg.html#items-iterators-all	iterator		189
-nimgrp	edges	graphalg.html#edges-iterators-all	iterator		213
-nimgrp	dfs	graphalg.html#dfs-iterators-all	iterator		328
-nimgrp	bfs	graphalg.html#bfs-iterators-all	iterator		374
+nim	toposort	graphalg.html#toposort.i,Graph[D,M],HashSet[Edge[D,M]],bool	iterator toposort[D, M](g: Graph[D, M];\n               fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]]();\n               reverse: bool = false): Vertex[D, M]		815
+nimgrp	lookup	graphalg.html#lookup-procs-all	proc		433
+nimgrp	$	graphalg.html#$-procs-all	proc		130
+nimgrp	isolated	graphalg.html#isolated-procs-all	proc		479
+nimgrp	initgraph	graphalg.html#initGraph-procs-all	proc		172
+nimgrp	items	graphalg.html#items-iterators-all	iterator		208
+nimgrp	edges	graphalg.html#edges-iterators-all	iterator		232
+nimgrp	dfs	graphalg.html#dfs-iterators-all	iterator		347
+nimgrp	bfs	graphalg.html#bfs-iterators-all	iterator		393
 heading	Computational budget	graphalg.html#finding-feedback-arc-sets-computational-budget	  Computational budget		0
 heading	Graph Algorithms	graphalg.html#graph-algorithms	 Graph Algorithms		0
+heading	Strongly Connected Component	graphalg.html#strongly-connected-component	 Strongly Connected Component		0
 heading	Feedback Arc Sets	graphalg.html#feedback-arc-sets	 Feedback Arc Sets		0
-heading	Additions	graphalg.html#additions	 Additions		0
+heading	Algorithm	graphalg.html#feedback-arc-sets-algorithm	  Algorithm		0
+heading	Condensation	graphalg.html#condensation	 Condensation		0
+heading	Basis	graphalg.html#basis	 Basis		0
+heading	Finding Vertices	graphalg.html#finding-vertices	 Finding Vertices		0
 heading	Finding feedback arc sets	graphalg.html#finding-feedback-arc-sets	 Finding feedback arc sets		0
