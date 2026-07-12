@@ -1,34 +1,35 @@
 nimTitle	graphalg	graphalg.html	module src/graphalg		0
-nim	Vertex	graphalg.html#Vertex	type Vertex		38
-nim	SCC	graphalg.html#SCC	type SCC		65
-nim	NoData	graphalg.html#NoData	object NoData		68
-nim	Graph	graphalg.html#Graph	type Graph		71
-nim	hash	graphalg.html#hash,T	proc hash[T: ref](x: T): Hash		99
-nim	hash	graphalg.html#hash,Edge	proc hash(e: Edge): Hash		103
-nim	`$`	graphalg.html#$,Graph	proc `$`(g: Graph): string		113
-nim	repr	graphalg.html#repr,Vertex	proc repr(v: Vertex): string		117
-nim	`$`	graphalg.html#$,Vertex	proc `$`(v: Vertex): string		129
-nim	`$`	graphalg.html#$,Edge	proc `$`(e: Edge; revArrow = false): string		135
-nim	`$`	graphalg.html#$,SCC	proc `$`(s: SCC): string		141
-nim	initVertex	graphalg.html#initVertex,string,D	proc initVertex[D, M = NoData](label: string; data: D = default(D)): Vertex[D, NoData]		147
-nim	initGraph	graphalg.html#initGraph,openArray[Vertex[D,M]]	proc initGraph[D, M](v: openArray[Vertex[D, M]]): Graph[D, M]		150
-nim	initGraph	graphalg.html#initGraph	proc initGraph[D, M](v: iterator (): Vertex[D, M]): Graph[D, M]		185
-nim	items	graphalg.html#items.i,SCC	iterator items(x: SCC): Vertex[SCC.D, SCC.M]		191
-nim	items	graphalg.html#items.i,Graph	iterator items(g: Graph): Vertex[Graph.D, Graph.M]		195
-nim	connectTo	graphalg.html#connectTo,Vertex[D,M],Vertex[D,M],M	proc connectTo[D, M](vfrom, vto: Vertex[D, M]; meta: M = default(M))		200
-nim	connectFrom	graphalg.html#connectFrom,Vertex[D,M],Vertex[D,M],M	proc connectFrom[D, M](vto, vfrom: Vertex[D, M]; meta: M = default(M))		206
-nim	connectToSelf	graphalg.html#connectToSelf,Vertex,typeof(default[Vertex.M](Vertex.M))	proc connectToSelf(x: Vertex; meta: Vertex.M = default[Vertex.M](Vertex.M))		211
-nim	dfs	graphalg.html#dfs.i,Vertex[D,M],Option[EdgeFilter[Edge[D,M]]],Option[VertexFilter[Vertex[D,M]]],bool	iterator dfs[D, M](anchor: Vertex[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[\n    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[\n    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]		330
-nim	dfs	graphalg.html#dfs.i,Graph[D,M],Option[EdgeFilter[Edge[D,M]]],Option[VertexFilter[Vertex[D,M]]],bool	iterator dfs[D, M](graph: Graph[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[\n    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[\n    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]		364
-nim	condensation	graphalg.html#condensation,Graph[D,M]	proc condensation[D, M](g: Graph[D, M]): typeof(g.condensation)		660
-nim	basis=	graphalg.html#basis=,Graph,openArray[string]	proc basis=(g: Graph; vlabel: openArray[string])		733
-nim	fasEadesLinSmith	graphalg.html#fasEadesLinSmith,Graph	proc fasEadesLinSmith(graph: Graph): HashSet[Edge[Graph.D, Graph.M]]		309
-nim	fasOptimizedEadesLinSmith	graphalg.html#fasOptimizedEadesLinSmith,Graph,int	proc fasOptimizedEadesLinSmith(graph: Graph; passes = 3): HashSet[\n    Vertex[Graph.D, Graph.M]]		418
-nimgrp	$	graphalg.html#$-procs-all	proc		113
-nimgrp	hash	graphalg.html#hash-procs-all	proc		99
-nimgrp	initgraph	graphalg.html#initGraph-procs-all	proc		150
-nimgrp	items	graphalg.html#items-iterators-all	iterator		191
-nimgrp	dfs	graphalg.html#dfs-iterators-all	iterator		330
+nim	Vertex	graphalg.html#Vertex	type Vertex		41
+nim	SCC	graphalg.html#SCC	type SCC		68
+nim	NoData	graphalg.html#NoData	object NoData		71
+nim	Graph	graphalg.html#Graph	type Graph		74
+nim	hash	graphalg.html#hash,T	proc hash[T: ref](x: T): Hash		102
+nim	hash	graphalg.html#hash,Edge	proc hash(e: Edge): Hash		106
+nim	`$`	graphalg.html#$,Graph	proc `$`(g: Graph): string		116
+nim	repr	graphalg.html#repr,Vertex	proc repr(v: Vertex): string		120
+nim	`$`	graphalg.html#$,Vertex	proc `$`(v: Vertex): string		132
+nim	`$`	graphalg.html#$,Edge	proc `$`(e: Edge; revArrow = false): string		138
+nim	`$`	graphalg.html#$,SCC	proc `$`(s: SCC): string		144
+nim	initVertex	graphalg.html#initVertex,string,D	proc initVertex[D, M = NoData](label: string; data: D = default(D)): Vertex[D, NoData]		150
+nim	initGraph	graphalg.html#initGraph,openArray[Vertex[D,M]]	proc initGraph[D, M](v: openArray[Vertex[D, M]]): Graph[D, M]		153
+nim	initGraph	graphalg.html#initGraph	proc initGraph[D, M](v: iterator (): Vertex[D, M]): Graph[D, M]		188
+nim	items	graphalg.html#items.i,SCC	iterator items(x: SCC): Vertex[SCC.D, SCC.M]		194
+nim	items	graphalg.html#items.i,Graph	iterator items(g: Graph): Vertex[Graph.D, Graph.M]		198
+nim	connectTo	graphalg.html#connectTo,Vertex[D,M],Vertex[D,M],M	proc connectTo[D, M](vfrom, vto: Vertex[D, M]; meta: M = default(M))		203
+nim	connectFrom	graphalg.html#connectFrom,Vertex[D,M],Vertex[D,M],M	proc connectFrom[D, M](vto, vfrom: Vertex[D, M]; meta: M = default(M))		209
+nim	connectToSelf	graphalg.html#connectToSelf,Vertex,typeof(default[Vertex.M](Vertex.M))	proc connectToSelf(x: Vertex; meta: Vertex.M = default[Vertex.M](Vertex.M))		214
+nim	dfs	graphalg.html#dfs.i,Vertex[D,M],Option[EdgeFilter[Edge[D,M]]],Option[VertexFilter[Vertex[D,M]]],bool	iterator dfs[D, M](anchor: Vertex[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[\n    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[\n    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]		333
+nim	dfs	graphalg.html#dfs.i,Graph[D,M],Option[EdgeFilter[Edge[D,M]]],Option[VertexFilter[Vertex[D,M]]],bool	iterator dfs[D, M](graph: Graph[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[\n    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[\n    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]		367
+nim	condensation	graphalg.html#condensation,Graph[D,M]	proc condensation[D, M](g: Graph[D, M]): typeof(g.condensation)		663
+nim	basis=	graphalg.html#basis=,Graph,openArray[string]	proc basis=(g: Graph; vlabel: openArray[string])		736
+nim	fasEadesLinSmith	graphalg.html#fasEadesLinSmith,Graph	proc fasEadesLinSmith(graph: Graph): HashSet[Edge[Graph.D, Graph.M]]		306
+nim	fasOptimizedEadesLinSmith	graphalg.html#fasOptimizedEadesLinSmith,Graph,int	proc fasOptimizedEadesLinSmith(graph: Graph; passes = 3): HashSet[\n    Vertex[Graph.D, Graph.M]]		415
+nimgrp	$	graphalg.html#$-procs-all	proc		116
+nimgrp	hash	graphalg.html#hash-procs-all	proc		102
+nimgrp	initgraph	graphalg.html#initGraph-procs-all	proc		153
+nimgrp	items	graphalg.html#items-iterators-all	iterator		194
+nimgrp	dfs	graphalg.html#dfs-iterators-all	iterator		333
+heading	Graph Algorithms	graphalg.html#graph-algorithms	 Graph Algorithms		0
 heading	Feedback Arc Sets	graphalg.html#feedback-arc-sets	 Feedback Arc Sets		0
 heading	Additions	graphalg.html#additions	 Additions		0
 heading	Finding feedback arc sets	graphalg.html#finding-feedback-arc-sets	 Finding feedback arc sets		0
