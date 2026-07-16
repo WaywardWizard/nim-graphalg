@@ -49,7 +49,7 @@ type
     ccTraversible
     ## Post pruning a single source node exists from which all other nodes may
     ## be reached. Test with DFS. O(V+E)
-  
+
     # ccThoroughfare ## Any vertex with incoming edge may reach
 
   FasStrategy = enum
@@ -57,32 +57,16 @@ type
     fsBruteEdgeset ## brute force FAS with edge sets
     fsEls ## Eades lin smith ordering
     fsElsReorder ## Eades lin smith with best gap positioning
-  
+
 const BRUTE_EDGES* = 20 ## dont brute for more edges
 const BRUTE_VERTICES* = 10 ## dont brute for more vertices
 const JUST_ELS* = 3000 ## node count before we stop doing reorder passes
 
 type
-
-  BiMap[T, U] = object
-    ## Bidirectional map
-    ab: Table[T, U]
-    ba: Table[U, T]
-
   VertexOrdering[V: Vertex] = object
     ## Vertices indexed 1..N and vice versa
     m: BiMap[V, int] # vertex to index, index to vertex
     biggest: int = -1 #
-    
-proc `[]`[T, U](x: BiMap[T, U], y: T): U {.inline.} =
-  ## Forwards lookup
-  ##
-  ## Where T == U then backwards lookups are done manually
-  x.ab[y]
-
-proc `[]`[T, U](x: BiMap[T, U], y: U): T {.inline.} =
-  ## Reverse lookuo
-  x.ba[y]
 
 proc `[]`(x: VertexOrdering, v: VertexOrdering.V | int): int | VertexOrdering.V =
   ## Forward/reverse lookup on ordering
@@ -92,8 +76,7 @@ proc `[]=`(x: var VertexOrdering, u: int, v: VertexOrdering.V) {.inline.} =
   ## add vertex to ordering at indice
   if u > x.biggest:
     x.biggest = u
-  x.m.ba[u] = v
-  x.m.ab[v] = u
+  x.m[u] = v
 
 proc `[]=`(x: var VertexOrdering, u: VertexOrdering.V, v: int) {.inline.} =
   if v > x.biggest:
@@ -107,10 +90,7 @@ proc add(x: var VertexOrdering, u: VertexOrdering.V) {.inline.} =
 
 proc contains(x: VertexOrdering, val: VertexOrdering.V | int): bool =
   ## Contains supports in and notin on vertex ordering
-  when val is Vertex:
-    val in x.m.ab
-  else:
-    val in x.m.ba
+  val in x.m
 
 proc printLabels[T](x: VertexOrdering[Vertex[string, T]]): string =
   ##  Labels of vertices in order for inspection
@@ -122,14 +102,13 @@ proc initVertexOrdering[T: Vertex](vertices: Iterable[T]): VertexOrdering[T] =
 
 proc `swap`(x: var VertexOrdering, p, q: int) {.inline.} = # 6x hash, lookup
   ## Swap two vertices in the ordering
-  swap x.m.ba[p], x.m.ba[q] # vertex at indice q to p, vversa
-  swap x.m.ab[x[q]], x.m.ab[x[p]]
+  x.m.swap(p,q)
 
 iterator items(x: VertexOrdering): VertexOrdering.V =
   ## Iterate items of ordering in order
   # dont add/rm vertices while iterating
   for ix in 1 .. x.biggest:
-    yield x.m.ba[ix]
+    yield x.m[ix]
 
 iterator pairs(x: VertexOrdering): (int, Vertex) =
   ## Enumerated vertices of ordering in order
@@ -417,18 +396,26 @@ proc fasOptimizedEadesLinSmith*(graph: Graph, passes=3): HashSet[Edge[Graph.D,Gr
   ## to shift vertices to optimal gap. AKA iterative local search.
   graph.vertices.fasOptimizedEadesLinSmith(passes)
 
-proc test(constraint: ConnectivityConstraint, g: Graph, fas: HashSet[Edge]): bool =
+proc test[D,M](constraint: ConnectivityConstraint, g: Graph[D,M], fas: HashSet[Edge[D,M]]=initHashSet[Edge[D,M]]()): bool =
   ## Test if graph satisfies constraint where given FAS applied
   ##
+  ## ccAcyclic will leverage cached SCC computation
   ##
   case constraint
   of ccAcyclic:
-    let efilter: proc(x: Edge): bool {.closure,nosideeffect,gcsafe.} = (x: Edge) => x in fas # edge filter
-    # Acyclic iff every SCC is a singleton (no multi-vertex SCC => no cycle)
-    for c in g.sccs(pruned = some(efilter)):
-      if c.vertices.len > 1:
-        return false
-    return true
+    let efilter: EdgeFilter[D,M] = EdgeFilter[D,M](
+      semanticHash: fas.hash,
+      predicate: some(proc(x: Edge[D,M]): bool {.closure,nosideeffect,gcsafe.} = x in fas)
+    )
+    # Acyclic every SCC is a singleton (no multi-vertex SCC => no cycle) and no
+    # singleton has a self edge
+    for c in g.sccs(efilter= efilter):
+      if c.vertices.len>1: return false # more than one vertex in an scc is a cycle
+      if c.vertices.chooseAny.selfEdges.len > 0:
+        # filterIt keeps items *fulfilling* the predicate, the filter is the opposite
+        if c.vertices.chooseAny.selfEdges.filterIt(not efilter(it)).len > 0:
+          return false # self edge
+    return true # all sccs acyclic
   else: # all others unimplemented
     return false
 
@@ -438,6 +425,7 @@ proc test[D, M](
   ## Test the given (scc) feedback arc set meets the constraint
   ##
   ## Edgeset constraints:
+  ##   Acyclic: No cycles or self edges exist
   ##   Local Traversibility: There exists a root node in the component from which
   ##   all other nodes may be reached. One source node.
   ##   Weak Connectivity: There exists an undirected path to all other nodes in
@@ -454,26 +442,29 @@ proc test[D, M](
   ## any exit vertex. This is the most restrictive constraint. The brute force
   ## search space can be restricted by identifying forced edges. These are the
   ## edges that must exist for vertex A to reach B regardless of the path taken
-  var efilter = proc(x: Edge[D, M]): bool =
-    x in fas # edge filter, needs {.closure.}
+  let efilter = EdgeFilter[D,M](
+    semanticHash: hash(fas),
+    predicate:  some(proc(x: Edge[D, M]): bool = x in fas)
+  )
   case constraint
   of ccAcyclic: # O(V+E)
     # Acyclic iff every SCC is a singleton (no multi-vertex SCC => no cycle)
-    for c in sccs[Vertex[D, M]](s.vertices, pruned = some(efilter)):
-      if c.vertices.len > 1:
-        return false
+    # and no singleton has a self edge
+    for c in sccs[Vertex[D, M]](s.vertices, efilter):
+      if c.vertices.len > 1: return false
+      if c.vertices.chooseAny.selfEdges.filterIt(not efilter(it)).len > 0: return false
     return true
   of ccWeak: # O(V+E)
     var length = 0
     for vscc in s:
-      for v in vscc.dfs(undirected = true, edgeFilter = some(efilter)):
+      for v in vscc.dfs(undirected = true, edgefilter = efilter):
         length += 1
       break # all vertices reachable from any vertex in an SCC
     if length == s.vertices.len:
       return true
   of ccTraversible: # O(V+E)
     var root: Vertex[D, M]
-    for vx in sources[Vertex[D, M]](s.vertices, some(efilter)):
+    for vx in sources[Vertex[D, M]](s.vertices, efilter):
       if not root.isnil: # only one root allowed
         return false
       root = vx
@@ -555,7 +546,7 @@ proc fasBruteEdgeset*(
   ## No iterator return for efficiency here as we must find the full edgeset
   ##
   ## A none() return represents that no edge set was found meeting the constraints
-  ## 
+  ##
   ## Any fas will include all self edges
   # combinator expects an openArray; collect edges into a seq first
   var edges: seq[Edge[SCC.D,SCC.M]]
@@ -585,7 +576,7 @@ proc fasBruteEdgeset*(
 
 proc pickFasAlgorithm(s: SCC): FasStrategy =
   ## Brute force or Eades-Lin-Smith depending on SCC size
-  ## 
+  ##
   ## Can further tweak with computation budgets as future development direction
   var N: int = s.vertices.len()
   var M: int = 0
@@ -625,11 +616,11 @@ proc fas*(g: Graph): HashSet[Edge[Graph.D,Graph.M]] =
   ## 2) Accumulate FAS
   ## 2a) Iterate SCC topologically
   ## 2b) Generate FAS per SCC
-  var 
+  var
     scc: SCC[Graph.D,Graph.M]
     cumulator: HashSet[Edge[Graph.D,Graph.M]]
-    
-  for vx in g.condensation():
+
+  for vx in g.condensation().vertices:
     scc = vx.data
     if scc.singleton: # no fas in this unless it has a selfedge
       for e in scc.chooseAnyVertex.selfEdges: # just the one vertex
@@ -641,5 +632,5 @@ proc fas*(g: Graph): HashSet[Edge[Graph.D,Graph.M]] =
           of fsElsReorder: scc.vertices.fasOptimizedEadesLinSmith[:Vertex[Graph.D,Graph.M]](passes=3)
           of fsBruteVertexOrder: (scc.fasBruteVertexOrdering()).get()
           of fsBruteEdgeset: scc.fasBruteEdgeset().get()
-  
+
   return cumulator
