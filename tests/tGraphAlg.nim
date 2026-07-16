@@ -27,7 +27,7 @@ var
   g5 = graph:
     Z
 
-var
+let
   bases = [(g0,@["A"]),(g1,@["A"]), (g2,@["A","L","M","N"]), (g3, @["A"]), (g4,@["A"]), (g5, @["Z"])]
   scc = [(g0,3), (g1,10), (g2, 10), (g3,1), (g4,2)]
   isolatedSccs = [(g0, 0), (g1, 0), (g2,3), (g3, 1), (g4,0)]
@@ -39,6 +39,8 @@ var
   sourceLabels = [(g0,@["A"]),(g1,@["A"]),(g2,@["A"]),(g3,@[]),(g4,@["A"])]
   sinkLabels = [(g0,@["C"]),(g1,@["I","J"]),(g2,@["J"]),(g3,@[]),(g4,@[])]
   elsOrderAndFas = [(g3,("A",@[("A","A")])),(g0,("ABC",@[])),(g1,("ACEDFBHGIJ",@[])),(g2,("ACDBHIEFGLMNJ",@[("G","I")])),(g4,("ACDB",@[("B","C")])),(g5,("Z",@[]))]
+  gkahn = [(g0,"ABC"), (g1,"ACEDFGBHJI"),(g2,"LMNACDBHJ"),(g3,""), (g4,"A")]
+  gtopo = [(g0,"ABC"), (g1,"ACEDFGBHJI"),(g2,"LMNGACDBHJIEF"),(g3,"A"), (g4,"CDAB")]
 
 
 for (g,b) in bases: g.basis = b
@@ -127,13 +129,13 @@ suite "Unit":
       g2.`basis=` @["Z"] # unknown label
 
     g2.`basis=` @["A"]
-    check len(g2.thebasis) == 1
+    check len(g2.basis()) == 1
     check g2.basis.toSeq.len == 1
-    
+
     # iterator uses set basis appropriately
     g2.`basis=` @["A", "L", "M", "N"]
     check g2.basis.toSeq.len == 4
-    check len(g2.thebasis) == 4
+    check len(g2.basis()) == 4
 
   test "Sources":
     for (g,n) in gsources:
@@ -185,7 +187,7 @@ suite "Unit":
 
 
 suite "Integration":
-  test "Cycles":
+  test "Cycles / Finding strongly connected components":
     for (g,n) in scc:
       check g.sccs.toseq.len == n
 
@@ -352,9 +354,35 @@ suite "Integration":
         post += es.card
 
       check post==n
-      
+
   test "Fas for a graph":
-    var ix=0
     for (g,fas) in minfas:
       check g.fas.card == fas.len
-    
+
+  test "Acyclic testing (including self edge case)":
+    for (g,fas) in minfas: # 2 0 1 3 4 5
+      if fas.len>0:
+        check not ccAcyclic.test(g) # not acyclic without a fas
+        check ccAcyclic.test(g,g.fas) # derived fas shall make it acyclic
+      else:
+        check ccAcyclic.test(g) # no fas its already acyclic
+
+  test "Kahn Ordering":
+    for (g,o) in gkahn:
+      var korder = ""
+      for v in g.kahn:
+        korder &= v.label
+      check korder == o
+
+    # with a fas, we should see all nodes
+    var korder = ""
+    for v in g2.kahn(g2.fas):
+      korder &= v.label
+
+  test "Toposort":
+    for (g,o) in gtopo:
+      var order = ""
+      for v in g.toposort(g.fas):
+        order &= v.label
+      check order == o
+        
