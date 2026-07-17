@@ -28,7 +28,7 @@
     <label for="nav-toggle" id="nav-overlay"></label>
     <div class="container">
       <h1 class="title">Index</h1>
-      Modules: <a href="graphalg.html">graphalg</a>, <a href="graphalg/datastructures.html">graphalg/datastructures</a>, <a href="graphalg/util.html">graphalg/util</a>.<br/><p /><h2>API symbols</h2>
+      Modules: <a href="graphalg.html">graphalg</a>, <a href="graphalg/util.html">graphalg/util</a>.<br/><p /><h2>API symbols</h2>
 <dl><dt><a name="%60%24%60" href="#%60%24%60"><span>`$`:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="graphalg: proc `$`(e: Edge; revArrow = false): string" href="graphalg.html#%24%2CEdge">graphalg: proc `$`(e: Edge; revArrow = false): string</a></li>
@@ -39,23 +39,27 @@
           <li><a class="reference external"
           data-doc-search-tag="graphalg: proc `$`(v: Vertex): string" href="graphalg.html#%24%2CVertex">graphalg: proc `$`(v: Vertex): string</a></li>
           </ul></dd>
-<dt><a name="%60in%60" href="#%60in%60"><span>`in`:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="datastructures: proc `in`(x: var IndexedList; val: IndexedList.L.T)" href="graphalg/datastructures.html#in%2CIndexedList%2C">datastructures: proc `in`(x: var IndexedList; val: IndexedList.L.T)</a></li>
-          </ul></dd>
 <dt><a name="add" href="#add"><span>add:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="graphalg: proc add[D, M](g: Graph[D, M]; v: Vertex[D, M])" href="graphalg.html#add%2CGraph%5BD%2CM%5D%2CVertex%5BD%2CM%5D">graphalg: proc add[D, M](g: Graph[D, M]; v: Vertex[D, M])</a></li>
-          <li><a class="reference external"
-          data-doc-search-tag="datastructures: proc add(x: var IndexedList; val: IndexedList.L.T)" href="graphalg/datastructures.html#add%2CIndexedList%2C">datastructures: proc add(x: var IndexedList; val: IndexedList.L.T)</a></li>
           </ul></dd>
 <dt><a name="basis" href="#basis"><span>basis:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="graphalg: iterator basis(g: Graph): Vertex[Graph.D, Graph.M]" href="graphalg.html#basis.i%2CGraph">graphalg: iterator basis(g: Graph): Vertex[Graph.D, Graph.M]</a></li>
+          data-doc-search-tag="graphalg: proc basis[D, M](g: Graph[D, M]; edgeFilter: EdgeFilter[D, M] = default(
+    EdgeFilter[D, M]);      ## no filter
+            vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M])): seq[
+    Vertex[D, M]]" href="graphalg.html#basis%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D">graphalg: proc basis[D, M](g: Graph[D, M]; edgeFilter: EdgeFilter[D, M] = default(
+    EdgeFilter[D, M]);      ## no filter
+            vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M])): seq[
+    Vertex[D, M]]</a></li>
           </ul></dd>
 <dt><a name="basis%3D" href="#basis%3D"><span>basis=:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="graphalg: proc basis=(g: Graph; vlabel: openArray[string])" href="graphalg.html#basis%3D%2CGraph%2CopenArray%5Bstring%5D">graphalg: proc basis=(g: Graph; vlabel: openArray[string])</a></li>
+          data-doc-search-tag="graphalg: proc basis=[D, M](g: Graph[D, M]; vlabel: openArray[string]; edgeFilter: EdgeFilter[
+    D, M] = default(EdgeFilter[D, M]); ## no filter
+             vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]))" href="graphalg.html#basis%3D%2CGraph%5BD%2CM%5D%2CopenArray%5Bstring%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D">graphalg: proc basis=[D, M](g: Graph[D, M]; vlabel: openArray[string]; edgeFilter: EdgeFilter[
+    D, M] = default(EdgeFilter[D, M]); ## no filter
+             vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]))</a></li>
           </ul></dd>
 <dt><a name="bfs" href="#bfs"><span>bfs:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -77,7 +81,11 @@
           </ul></dd>
 <dt><a name="condensation" href="#condensation"><span>condensation:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="graphalg: proc condensation[D, M](g: Graph[D, M]): Graph[SCC[D, M], NoData]" href="graphalg.html#condensation%2CGraph%5BD%2CM%5D">graphalg: proc condensation[D, M](g: Graph[D, M]): Graph[SCC[D, M], NoData]</a></li>
+          data-doc-search-tag="graphalg: proc condensation[D, M](g: Graph[D, M]; edgeFilter: EdgeFilter[D, M] = default(
+    EdgeFilter[D, M]); vertexFilter: VertexFilter[D, M] = default(
+    VertexFilter[D, M])): Graph[SCC[D, M], NoData]" href="graphalg.html#condensation%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D">graphalg: proc condensation[D, M](g: Graph[D, M]; edgeFilter: EdgeFilter[D, M] = default(
+    EdgeFilter[D, M]); vertexFilter: VertexFilter[D, M] = default(
+    VertexFilter[D, M])): Graph[SCC[D, M], NoData]</a></li>
           </ul></dd>
 <dt><a name="connectFrom" href="#connectFrom"><span>connectFrom:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -99,23 +107,23 @@
 <li><a class="reference external"
           data-doc-search-tag="graphalg: Direction.dAll" href="graphalg.html#dAll">graphalg: Direction.dAll</a></li>
           </ul></dd>
-<dt><a name="del" href="#del"><span>del:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="datastructures: proc del(x: var IndexedList; val: IndexedList.L.T)" href="graphalg/datastructures.html#del%2CIndexedList%2C">datastructures: proc del(x: var IndexedList; val: IndexedList.L.T)</a></li>
-          </ul></dd>
 <dt><a name="dfs" href="#dfs"><span>dfs:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="graphalg: iterator dfs[D, M](graph: Graph[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[
-    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[
-    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]" href="graphalg.html#dfs.i%2CGraph%5BD%2CM%5D%2COption%5BEdgeFilter%5BEdge%5BD%2CM%5D%5D%5D%2COption%5BVertexFilter%5BVertex%5BD%2CM%5D%5D%5D%2Cbool">graphalg: iterator dfs[D, M](graph: Graph[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[
-    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[
-    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]</a></li>
+          data-doc-search-tag="graphalg: iterator dfs[D, M](graph: Graph[D, M];
+          edgeFilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]);
+          vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]);
+          undirected: bool = false): Vertex[D, M]" href="graphalg.html#dfs.i%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D%2Cbool">graphalg: iterator dfs[D, M](graph: Graph[D, M];
+          edgeFilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]);
+          vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]);
+          undirected: bool = false): Vertex[D, M]</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="graphalg: iterator dfs[D, M](anchor: Vertex[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[
-    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[
-    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]" href="graphalg.html#dfs.i%2CVertex%5BD%2CM%5D%2COption%5BEdgeFilter%5BEdge%5BD%2CM%5D%5D%5D%2COption%5BVertexFilter%5BVertex%5BD%2CM%5D%5D%5D%2Cbool">graphalg: iterator dfs[D, M](anchor: Vertex[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[
-    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[
-    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]</a></li>
+          data-doc-search-tag="graphalg: iterator dfs[D, M](anchor: Vertex[D, M];
+          edgeFilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]);
+          vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]);
+          undirected: bool = false): Vertex[D, M]" href="graphalg.html#dfs.i%2CVertex%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D%2Cbool">graphalg: iterator dfs[D, M](anchor: Vertex[D, M];
+          edgeFilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]);
+          vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]);
+          undirected: bool = false): Vertex[D, M]</a></li>
           </ul></dd>
 <dt><a name="dInbound" href="#dInbound"><span>dInbound:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -129,6 +137,10 @@
 <li><a class="reference external"
           data-doc-search-tag="graphalg: Direction.dOutbound" href="graphalg.html#dOutbound">graphalg: Direction.dOutbound</a></li>
           </ul></dd>
+<dt><a name="dSelf" href="#dSelf"><span>dSelf:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="graphalg: Direction.dSelf" href="graphalg.html#dSelf">graphalg: Direction.dSelf</a></li>
+          </ul></dd>
 <dt><a name="Edge" href="#Edge"><span>Edge:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="graphalg: type Edge" href="graphalg.html#Edge">graphalg: type Edge</a></li>
@@ -139,9 +151,13 @@
           </ul></dd>
 <dt><a name="edges" href="#edges"><span>edges:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="graphalg: iterator edges[D, M](g: Graph[D, M]; direction = dOutbound): Edge[D, M]" href="graphalg.html#edges.i%2CGraph%5BD%2CM%5D">graphalg: iterator edges[D, M](g: Graph[D, M]; direction = dOutbound): Edge[D, M]</a></li>
+          data-doc-search-tag="graphalg: iterator edges[D, M](g: Graph[D, M]; direction = dOutbound;
+            filter: EdgeFilter[D, M] = default(EdgeFilter[D, M])): Edge[D, M]" href="graphalg.html#edges.i%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D">graphalg: iterator edges[D, M](g: Graph[D, M]; direction = dOutbound;
+            filter: EdgeFilter[D, M] = default(EdgeFilter[D, M])): Edge[D, M]</a></li>
           <li><a class="reference external"
-          data-doc-search-tag="graphalg: iterator edges[D, M](v: Vertex[D, M]; direction: Direction = dOutbound): Edge[D, M]" href="graphalg.html#edges.i%2CVertex%5BD%2CM%5D%2CDirection">graphalg: iterator edges[D, M](v: Vertex[D, M]; direction: Direction = dOutbound): Edge[D, M]</a></li>
+          data-doc-search-tag="graphalg: iterator edges[D, M](v: Vertex[D, M]; direction: Direction = dOutbound;
+            filter: EdgeFilter[D, M] = default(EdgeFilter[D, M])): Edge[D, M]" href="graphalg.html#edges.i%2CVertex%5BD%2CM%5D%2CDirection%2CEdgeFilter%5BD%2CM%5D">graphalg: iterator edges[D, M](v: Vertex[D, M]; direction: Direction = dOutbound;
+            filter: EdgeFilter[D, M] = default(EdgeFilter[D, M])): Edge[D, M]</a></li>
           </ul></dd>
 <dt><a name="fas" href="#fas"><span>fas:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -169,12 +185,16 @@
     Edge[Graph.D, Graph.M]]" href="graphalg.html#fasOptimizedEadesLinSmith%2CGraph%2Cint">graphalg: proc fasOptimizedEadesLinSmith(graph: Graph; passes = 3): HashSet[
     Edge[Graph.D, Graph.M]]</a></li>
           </ul></dd>
+<dt><a name="Filter" href="#Filter"><span>Filter:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="graphalg: object Filter" href="graphalg.html#Filter">graphalg: object Filter</a></li>
+          </ul></dd>
 <dt><a name="flux" href="#flux"><span>flux:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="graphalg: proc flux[D, M](v: Vertex[D, M]; efilter = none[
-    proc (x: Edge[D, M]): bool {.closure, noSideEffect, gcsafe.}]();
-           countSelfEdges: bool = true): tuple[i, o: int]" href="graphalg.html#flux%2CVertex%5BD%2CM%5D%2Ctypeof%28none%5Bproc%20%28x%3A%20Edge%5BD%2C%20M%5D%29%3A%20bool%20%7B.closure%2C%20noSideEffect%2C%20gcsafe.%7D%5D%28%29%29%2Cbool">graphalg: proc flux[D, M](v: Vertex[D, M]; efilter = none[
-    proc (x: Edge[D, M]): bool {.closure, noSideEffect, gcsafe.}]();
+          data-doc-search-tag="graphalg: proc flux[D, M](v: Vertex[D, M];
+           efilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]);
+           countSelfEdges: bool = true): tuple[i, o: int]" href="graphalg.html#flux%2CVertex%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2Cbool">graphalg: proc flux[D, M](v: Vertex[D, M];
+           efilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]);
            countSelfEdges: bool = true): tuple[i, o: int]</a></li>
           </ul></dd>
 <dt><a name="fluxd" href="#fluxd"><span>fluxd:</span></a></dt><dd><ul class="simple">
@@ -184,10 +204,6 @@
 <dt><a name="Graph" href="#Graph"><span>Graph:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="graphalg: type Graph" href="graphalg.html#Graph">graphalg: type Graph</a></li>
-          </ul></dd>
-<dt><a name="IndexedList" href="#IndexedList"><span>IndexedList:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="datastructures: object IndexedList" href="graphalg/datastructures.html#IndexedList">datastructures: object IndexedList</a></li>
           </ul></dd>
 <dt><a name="initGraph" href="#initGraph"><span>initGraph:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -209,19 +225,13 @@
           </ul></dd>
 <dt><a name="items" href="#items"><span>items:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="graphalg: iterator items(g: Graph): Vertex[Graph.D, Graph.M]" href="graphalg.html#items.i%2CGraph">graphalg: iterator items(g: Graph): Vertex[Graph.D, Graph.M]</a></li>
+          data-doc-search-tag="graphalg: iterator items(g: Graph; f: VertexFilter): Vertex[Graph.D, Graph.M]" href="graphalg.html#items.i%2CGraph%2CVertexFilter">graphalg: iterator items(g: Graph; f: VertexFilter): Vertex[Graph.D, Graph.M]</a></li>
           <li><a class="reference external"
           data-doc-search-tag="graphalg: iterator items(x: SCC): Vertex[SCC.D, SCC.M]" href="graphalg.html#items.i%2CSCC">graphalg: iterator items(x: SCC): Vertex[SCC.D, SCC.M]</a></li>
-          <li><a class="reference external"
-          data-doc-search-tag="datastructures: iterator items(x: IndexedList): IndexedList.L.T" href="graphalg/datastructures.html#items.i%2CIndexedList">datastructures: iterator items(x: IndexedList): IndexedList.L.T</a></li>
           </ul></dd>
 <dt><a name="JUST_ELS" href="#JUST_ELS"><span>JUST_ELS:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="graphalg: const JUST_ELS" href="graphalg.html#JUST_ELS">graphalg: const JUST_ELS</a></li>
-          </ul></dd>
-<dt><a name="len" href="#len"><span>len:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="datastructures: proc len(x: IndexedList): int" href="graphalg/datastructures.html#len%2CIndexedList">datastructures: proc len(x: IndexedList): int</a></li>
           </ul></dd>
 <dt><a name="lookup" href="#lookup"><span>lookup:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -237,25 +247,19 @@
 <li><a class="reference external"
           data-doc-search-tag="graphalg: object NoData" href="graphalg.html#NoData">graphalg: object NoData</a></li>
           </ul></dd>
-<dt><a name="popFirst" href="#popFirst"><span>popFirst:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="datastructures: proc popFirst(x: var IndexedList): IndexedList.L.T" href="graphalg/datastructures.html#popFirst%2CIndexedList">datastructures: proc popFirst(x: var IndexedList): IndexedList.L.T</a></li>
-          </ul></dd>
-<dt><a name="popLast" href="#popLast"><span>popLast:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="datastructures: proc popLast(x: var IndexedList): IndexedList.L.T" href="graphalg/datastructures.html#popLast%2CIndexedList">datastructures: proc popLast(x: var IndexedList): IndexedList.L.T</a></li>
-          </ul></dd>
-<dt><a name="prepend" href="#prepend"><span>prepend:</span></a></dt><dd><ul class="simple">
-<li><a class="reference external"
-          data-doc-search-tag="datastructures: proc prepend(x: var IndexedList; val: IndexedList.L.T)" href="graphalg/datastructures.html#prepend%2CIndexedList%2C">datastructures: proc prepend(x: var IndexedList; val: IndexedList.L.T)</a></li>
-          </ul></dd>
 <dt><a name="repr" href="#repr"><span>repr:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="graphalg: proc repr(v: Vertex): string" href="graphalg.html#repr%2CVertex">graphalg: proc repr(v: Vertex): string</a></li>
           </ul></dd>
 <dt><a name="resetBasis" href="#resetBasis"><span>resetBasis:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="graphalg: proc resetBasis(g: Graph)" href="graphalg.html#resetBasis%2CGraph">graphalg: proc resetBasis(g: Graph)</a></li>
+          data-doc-search-tag="graphalg: proc resetBasis[D, M](g: Graph[D, M]; edgeFilter: EdgeFilter[D, M] = default(
+    EdgeFilter[D, M]);      ## no filter
+                 vertexFilter: VertexFilter[D, M] = default(
+    VertexFilter[D, M]))" href="graphalg.html#resetBasis%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D">graphalg: proc resetBasis[D, M](g: Graph[D, M]; edgeFilter: EdgeFilter[D, M] = default(
+    EdgeFilter[D, M]);      ## no filter
+                 vertexFilter: VertexFilter[D, M] = default(
+    VertexFilter[D, M]))</a></li>
           </ul></dd>
 <dt><a name="SCC" href="#SCC"><span>SCC:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -263,7 +267,17 @@
           </ul></dd>
 <dt><a name="sccs" href="#sccs"><span>sccs:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
-          data-doc-search-tag="graphalg: iterator sccs(g: Graph): SCC[Graph.D, Graph.M]" href="graphalg.html#sccs.i%2CGraph">graphalg: iterator sccs(g: Graph): SCC[Graph.D, Graph.M]</a></li>
+          data-doc-search-tag="graphalg: iterator sccs(g: Graph; filterSemanticHash: Hash): SCC[Graph.D, Graph.M]" href="graphalg.html#sccs.i%2CGraph%2CHash">graphalg: iterator sccs(g: Graph; filterSemanticHash: Hash): SCC[Graph.D, Graph.M]</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="graphalg: iterator sccs(g: Graph; efilter = default(EdgeFilter[Graph.D, Graph.M]); ## filter edges, default filters none
+     vfilter = default(VertexFilter[Graph.D, Graph.M])): SCC[Graph.D, Graph.M]" href="graphalg.html#sccs.i%2CGraph%2Ctypeof%28default%28EdgeFilter%5BGraph.D%2C%20Graph.M%5D%29%29%2Ctypeof%28default%28VertexFilter%5BGraph.D%2C%20Graph.M%5D%29%29">graphalg: iterator sccs(g: Graph; efilter = default(EdgeFilter[Graph.D, Graph.M]); ## filter edges, default filters none
+     vfilter = default(VertexFilter[Graph.D, Graph.M])): SCC[Graph.D, Graph.M]</a></li>
+          </ul></dd>
+<dt><a name="semanticHash" href="#semanticHash"><span>semanticHash:</span></a></dt><dd><ul class="simple">
+<li><a class="reference external"
+          data-doc-search-tag="graphalg: proc semanticHash(x: EdgeFilter; y: VertexFilter): Hash" href="graphalg.html#semanticHash%2CEdgeFilter%2CVertexFilter">graphalg: proc semanticHash(x: EdgeFilter; y: VertexFilter): Hash</a></li>
+          <li><a class="reference external"
+          data-doc-search-tag="graphalg: proc semanticHash(x: VertexFilter; y: EdgeFilter): Hash" href="graphalg.html#semanticHash%2CVertexFilter%2CEdgeFilter">graphalg: proc semanticHash(x: VertexFilter; y: EdgeFilter): Hash</a></li>
           </ul></dd>
 <dt><a name="singleton" href="#singleton"><span>singleton:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -292,10 +306,10 @@
 <dt><a name="toposort" href="#toposort"><span>toposort:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
           data-doc-search-tag="graphalg: iterator toposort[D, M](g: Graph[D, M];
-               fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]]();
-               reverse: bool = false): Vertex[D, M]" href="graphalg.html#toposort.i%2CGraph%5BD%2CM%5D%2CHashSet%5BEdge%5BD%2CM%5D%5D%2Cbool">graphalg: iterator toposort[D, M](g: Graph[D, M];
-               fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]]();
-               reverse: bool = false): Vertex[D, M]</a></li>
+               fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]]()): Vertex[D,
+    M]" href="graphalg.html#toposort.i%2CGraph%5BD%2CM%5D%2CHashSet%5BEdge%5BD%2CM%5D%5D">graphalg: iterator toposort[D, M](g: Graph[D, M];
+               fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]]()): Vertex[D,
+    M]</a></li>
           </ul></dd>
 <dt><a name="Vertex" href="#Vertex"><span>Vertex:</span></a></dt><dd><ul class="simple">
 <li><a class="reference external"
@@ -309,7 +323,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-12 11:01:28 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-17 20:43:19 UTC</small>
       </div>
     </div>
   </div>

@@ -55,8 +55,7 @@
     </div>
     <ul class="simple simple-toc" id="toc-list">
   <ul class="simple"><li><a class="reference" id="finding-feedback-arc-sets-computational-budget_toc" href="#finding-feedback-arc-sets-computational-budget">Computational budget</a></li>
-</ul><li><a class="reference" id="graph-algorithms_toc" href="#graph-algorithms">Graph Algorithms</a></li>
-<li><a class="reference" id="strongly-connected-component_toc" href="#strongly-connected-component">Strongly Connected Component</a></li>
+</ul><li><a class="reference" id="strongly-connected-component_toc" href="#strongly-connected-component">Strongly Connected Component</a></li>
 <li><a class="reference" id="feedback-arc-sets_toc" href="#feedback-arc-sets">Feedback Arc Sets</a></li>
 <ul class="simple"><li><a class="reference" id="feedback-arc-sets-algorithm_toc" href="#feedback-arc-sets-algorithm">Algorithm</a></li>
 </ul><li><a class="reference" id="condensation_toc" href="#condensation">Condensation</a></li>
@@ -71,11 +70,12 @@
     <summary><a class="reference reference-toplevel" href="#7" id="57">Types</a></summary>
     <ul class="simple simple-toc-section">
       <li><a class="reference" href="#Direction" title="Direction = enum
-  dOutbound, dInbound, dAll">Direction</a></li>
+  dOutbound, dInbound, dSelf, dAll">Direction</a></li>
 <li><a class="reference" href="#Edge" title="Edge[D; M] = ref object
   outbound*, inbound*: Vertex[D, M] ## vertex arc exits and enters
   meta*: M                   ## metadata, weights, applicability criteria etc">Edge</a></li>
-<li><a class="reference" href="#EdgeFilter" title="EdgeFilter[E] = proc (e: E): bool {.closure, nosideeffect, gcsafe.}">EdgeFilter</a></li>
+<li><a class="reference" href="#EdgeFilter" title="EdgeFilter[D; M] = Filter[Edge[D, M]]">EdgeFilter</a></li>
+<li><a class="reference" href="#Filter" title="Filter[T] = object">Filter</a></li>
 <li><a class="reference" href="#Graph" title="Graph[D; M] = ref object
   vertices*: OrderedSet[Vertex[D, M]]">Graph</a></li>
 <li><a class="reference" href="#NoData" title="NoData = object">NoData</a></li>
@@ -85,7 +85,7 @@
   data*: D
   outbound*, inbound*: seq[Edge[D, M]]
   selfEdges*: seq[Edge[D, M]]">Vertex</a></li>
-<li><a class="reference" href="#VertexFilter" title="VertexFilter[V] = proc (v: V): bool {.closure, noSideEffect, gcsafe.}">VertexFilter</a></li>
+<li><a class="reference" href="#VertexFilter" title="VertexFilter[D; M] = Filter[Vertex[D, M]]">VertexFilter</a></li>
 
     </ul>
   </details>
@@ -116,12 +116,30 @@
   <li><a class="reference" href="#add%2CGraph%5BD%2CM%5D%2CVertex%5BD%2CM%5D" title="add[D, M](g: Graph[D, M]; v: Vertex[D, M])">add[D, M](g: Graph[D, M]; v: Vertex[D, M])</a></li>
 
 </ul>
+<ul class="simple nested-toc-section">basis
+  <li><a class="reference" href="#basis%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D" title="basis[D, M](g: Graph[D, M]; edgeFilter: EdgeFilter[D, M] = default(
+    EdgeFilter[D, M]);      ## no filter
+            vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M])): seq[
+    Vertex[D, M]]">basis[D, M](g: Graph[D, M]; edgeFilter: EdgeFilter[D, M] = default(
+    EdgeFilter[D, M]);      ## no filter
+            vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M])): seq[
+    Vertex[D, M]]</a></li>
+
+</ul>
 <ul class="simple nested-toc-section">basis=
-  <li><a class="reference" href="#basis%3D%2CGraph%2CopenArray%5Bstring%5D" title="basis=(g: Graph; vlabel: openArray[string])">basis=(g: Graph; vlabel: openArray[string])</a></li>
+  <li><a class="reference" href="#basis%3D%2CGraph%5BD%2CM%5D%2CopenArray%5Bstring%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D" title="basis=[D, M](g: Graph[D, M]; vlabel: openArray[string]; edgeFilter: EdgeFilter[
+    D, M] = default(EdgeFilter[D, M]); ## no filter
+             vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]))">basis=[D, M](g: Graph[D, M]; vlabel: openArray[string]; edgeFilter: EdgeFilter[
+    D, M] = default(EdgeFilter[D, M]); ## no filter
+             vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]))</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">condensation
-  <li><a class="reference" href="#condensation%2CGraph%5BD%2CM%5D" title="condensation[D, M](g: Graph[D, M]): Graph[SCC[D, M], NoData]">condensation[D, M](g: Graph[D, M]): Graph[SCC[D, M], NoData]</a></li>
+  <li><a class="reference" href="#condensation%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D" title="condensation[D, M](g: Graph[D, M]; edgeFilter: EdgeFilter[D, M] = default(
+    EdgeFilter[D, M]); vertexFilter: VertexFilter[D, M] = default(
+    VertexFilter[D, M])): Graph[SCC[D, M], NoData]">condensation[D, M](g: Graph[D, M]; edgeFilter: EdgeFilter[D, M] = default(
+    EdgeFilter[D, M]); vertexFilter: VertexFilter[D, M] = default(
+    VertexFilter[D, M])): Graph[SCC[D, M], NoData]</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">connectFrom
@@ -163,10 +181,10 @@
 
 </ul>
 <ul class="simple nested-toc-section">flux
-  <li><a class="reference" href="#flux%2CVertex%5BD%2CM%5D%2Ctypeof%28none%5Bproc%20%28x%3A%20Edge%5BD%2C%20M%5D%29%3A%20bool%20%7B.closure%2C%20noSideEffect%2C%20gcsafe.%7D%5D%28%29%29%2Cbool" title="flux[D, M](v: Vertex[D, M]; efilter = none[
-    proc (x: Edge[D, M]): bool {.closure, noSideEffect, gcsafe.}]();
-           countSelfEdges: bool = true): tuple[i, o: int]">flux[D, M](v: Vertex[D, M]; efilter = none[
-    proc (x: Edge[D, M]): bool {.closure, noSideEffect, gcsafe.}]();
+  <li><a class="reference" href="#flux%2CVertex%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2Cbool" title="flux[D, M](v: Vertex[D, M];
+           efilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]);
+           countSelfEdges: bool = true): tuple[i, o: int]">flux[D, M](v: Vertex[D, M];
+           efilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]);
            countSelfEdges: bool = true): tuple[i, o: int]</a></li>
 
 </ul>
@@ -198,7 +216,18 @@
 
 </ul>
 <ul class="simple nested-toc-section">resetBasis
-  <li><a class="reference" href="#resetBasis%2CGraph" title="resetBasis(g: Graph)">resetBasis(g: Graph)</a></li>
+  <li><a class="reference" href="#resetBasis%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D" title="resetBasis[D, M](g: Graph[D, M]; edgeFilter: EdgeFilter[D, M] = default(
+    EdgeFilter[D, M]);      ## no filter
+                 vertexFilter: VertexFilter[D, M] = default(
+    VertexFilter[D, M]))">resetBasis[D, M](g: Graph[D, M]; edgeFilter: EdgeFilter[D, M] = default(
+    EdgeFilter[D, M]);      ## no filter
+                 vertexFilter: VertexFilter[D, M] = default(
+    VertexFilter[D, M]))</a></li>
+
+</ul>
+<ul class="simple nested-toc-section">semanticHash
+  <li><a class="reference" href="#semanticHash%2CEdgeFilter%2CVertexFilter" title="semanticHash(x: EdgeFilter; y: VertexFilter): Hash">semanticHash(x: EdgeFilter; y: VertexFilter): Hash</a></li>
+<li><a class="reference" href="#semanticHash%2CVertexFilter%2CEdgeFilter" title="semanticHash(x: VertexFilter; y: EdgeFilter): Hash">semanticHash(x: VertexFilter; y: EdgeFilter): Hash</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">singleton
@@ -221,31 +250,35 @@
   <details open>
     <summary><a class="reference reference-toplevel" href="#15" id="65">Iterators</a></summary>
     <ul class="simple simple-toc-section">
-      <ul class="simple nested-toc-section">basis
-  <li><a class="reference" href="#basis.i%2CGraph" title="basis(g: Graph): Vertex[Graph.D, Graph.M]">basis(g: Graph): Vertex[Graph.D, Graph.M]</a></li>
-
-</ul>
-<ul class="simple nested-toc-section">bfs
+      <ul class="simple nested-toc-section">bfs
   <li><a class="reference" href="#bfs.i%2CVertex" title="bfs(anchor: Vertex): Vertex">bfs(anchor: Vertex): Vertex</a></li>
 <li><a class="reference" href="#bfs.i%2CGraph" title="bfs(graph: Graph): Vertex[Graph.D, Graph.M]">bfs(graph: Graph): Vertex[Graph.D, Graph.M]</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">dfs
-  <li><a class="reference" href="#dfs.i%2CVertex%5BD%2CM%5D%2COption%5BEdgeFilter%5BEdge%5BD%2CM%5D%5D%5D%2COption%5BVertexFilter%5BVertex%5BD%2CM%5D%5D%5D%2Cbool" title="dfs[D, M](anchor: Vertex[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[
-    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[
-    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]">dfs[D, M](anchor: Vertex[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[
-    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[
-    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]</a></li>
-<li><a class="reference" href="#dfs.i%2CGraph%5BD%2CM%5D%2COption%5BEdgeFilter%5BEdge%5BD%2CM%5D%5D%5D%2COption%5BVertexFilter%5BVertex%5BD%2CM%5D%5D%5D%2Cbool" title="dfs[D, M](graph: Graph[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[
-    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[
-    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]">dfs[D, M](graph: Graph[D, M]; edgeFilter: Option[EdgeFilter[Edge[D, M]]] = EdgeFilter[
-    Edge[D, M]].none(); vertexFilter: Option[VertexFilter[Vertex[D, M]]] = none[
-    VertexFilter[Vertex[D, M]]](); undirected: bool = false): Vertex[D, M]</a></li>
+  <li><a class="reference" href="#dfs.i%2CVertex%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D%2Cbool" title="dfs[D, M](anchor: Vertex[D, M];
+          edgeFilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]);
+          vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]);
+          undirected: bool = false): Vertex[D, M]">dfs[D, M](anchor: Vertex[D, M];
+          edgeFilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]);
+          vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]);
+          undirected: bool = false): Vertex[D, M]</a></li>
+<li><a class="reference" href="#dfs.i%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D%2Cbool" title="dfs[D, M](graph: Graph[D, M];
+          edgeFilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]);
+          vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]);
+          undirected: bool = false): Vertex[D, M]">dfs[D, M](graph: Graph[D, M];
+          edgeFilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]);
+          vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]);
+          undirected: bool = false): Vertex[D, M]</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">edges
-  <li><a class="reference" href="#edges.i%2CGraph%5BD%2CM%5D" title="edges[D, M](g: Graph[D, M]; direction = dOutbound): Edge[D, M]">edges[D, M](g: Graph[D, M]; direction = dOutbound): Edge[D, M]</a></li>
-<li><a class="reference" href="#edges.i%2CVertex%5BD%2CM%5D%2CDirection" title="edges[D, M](v: Vertex[D, M]; direction: Direction = dOutbound): Edge[D, M]">edges[D, M](v: Vertex[D, M]; direction: Direction = dOutbound): Edge[D, M]</a></li>
+  <li><a class="reference" href="#edges.i%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D" title="edges[D, M](g: Graph[D, M]; direction = dOutbound;
+            filter: EdgeFilter[D, M] = default(EdgeFilter[D, M])): Edge[D, M]">edges[D, M](g: Graph[D, M]; direction = dOutbound;
+            filter: EdgeFilter[D, M] = default(EdgeFilter[D, M])): Edge[D, M]</a></li>
+<li><a class="reference" href="#edges.i%2CVertex%5BD%2CM%5D%2CDirection%2CEdgeFilter%5BD%2CM%5D" title="edges[D, M](v: Vertex[D, M]; direction: Direction = dOutbound;
+            filter: EdgeFilter[D, M] = default(EdgeFilter[D, M])): Edge[D, M]">edges[D, M](v: Vertex[D, M]; direction: Direction = dOutbound;
+            filter: EdgeFilter[D, M] = default(EdgeFilter[D, M])): Edge[D, M]</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">isolated
@@ -253,7 +286,7 @@
 
 </ul>
 <ul class="simple nested-toc-section">items
-  <li><a class="reference" href="#items.i%2CGraph" title="items(g: Graph): Vertex[Graph.D, Graph.M]">items(g: Graph): Vertex[Graph.D, Graph.M]</a></li>
+  <li><a class="reference" href="#items.i%2CGraph%2CVertexFilter" title="items(g: Graph; f: VertexFilter): Vertex[Graph.D, Graph.M]">items(g: Graph; f: VertexFilter): Vertex[Graph.D, Graph.M]</a></li>
 <li><a class="reference" href="#items.i%2CSCC" title="items(x: SCC): Vertex[SCC.D, SCC.M]">items(x: SCC): Vertex[SCC.D, SCC.M]</a></li>
 
 </ul>
@@ -262,7 +295,10 @@
 
 </ul>
 <ul class="simple nested-toc-section">sccs
-  <li><a class="reference" href="#sccs.i%2CGraph" title="sccs(g: Graph): SCC[Graph.D, Graph.M]">sccs(g: Graph): SCC[Graph.D, Graph.M]</a></li>
+  <li><a class="reference" href="#sccs.i%2CGraph%2Ctypeof%28default%28EdgeFilter%5BGraph.D%2C%20Graph.M%5D%29%29%2Ctypeof%28default%28VertexFilter%5BGraph.D%2C%20Graph.M%5D%29%29" title="sccs(g: Graph; efilter = default(EdgeFilter[Graph.D, Graph.M]); ## filter edges, default filters none
+     vfilter = default(VertexFilter[Graph.D, Graph.M])): SCC[Graph.D, Graph.M]">sccs(g: Graph; efilter = default(EdgeFilter[Graph.D, Graph.M]); ## filter edges, default filters none
+     vfilter = default(VertexFilter[Graph.D, Graph.M])): SCC[Graph.D, Graph.M]</a></li>
+<li><a class="reference" href="#sccs.i%2CGraph%2CHash" title="sccs(g: Graph; filterSemanticHash: Hash): SCC[Graph.D, Graph.M]">sccs(g: Graph; filterSemanticHash: Hash): SCC[Graph.D, Graph.M]</a></li>
 
 </ul>
 <ul class="simple nested-toc-section">sinks
@@ -274,11 +310,11 @@
 
 </ul>
 <ul class="simple nested-toc-section">toposort
-  <li><a class="reference" href="#toposort.i%2CGraph%5BD%2CM%5D%2CHashSet%5BEdge%5BD%2CM%5D%5D%2Cbool" title="toposort[D, M](g: Graph[D, M];
-               fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]]();
-               reverse: bool = false): Vertex[D, M]">toposort[D, M](g: Graph[D, M];
-               fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]]();
-               reverse: bool = false): Vertex[D, M]</a></li>
+  <li><a class="reference" href="#toposort.i%2CGraph%5BD%2CM%5D%2CHashSet%5BEdge%5BD%2CM%5D%5D" title="toposort[D, M](g: Graph[D, M];
+               fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]]()): Vertex[D,
+    M]">toposort[D, M](g: Graph[D, M];
+               fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]]()): Vertex[D,
+    M]</a></li>
 
 </ul>
 
@@ -290,13 +326,12 @@
 
   </div>
   <div class="nine columns" id="content">
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L1" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L1" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L1" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
     <div id="tocRoot"></div>
     
-    <p class="module-desc">
-<h1><a class="toc-backref" id="graph-algorithms" href="#graph-algorithms">Graph Algorithms</a></h1><table class="docinfo" frame="void" rules="none"><col class="docinfo-name" /><col class="docinfo-content" /><tbody valign="top"><tr><th class="docinfo-name">Author:</th><td>Ben Tomlin</td></tr>
+    <p class="module-desc">#<table class="docinfo" frame="void" rules="none"><col class="docinfo-name" /><col class="docinfo-content" /><tbody valign="top"><tr><th class="docinfo-name">Author:</th><td>Ben Tomlin</td></tr>
 </tbody></table><p>Graph structure with useful algorithm implementations.</p>
 <p>Intended as a lower level implementation with enough detail exposed to be used for broad range of purposes. For example, walkDfs lists the traversed in DFS, which can be useful for algorithms that act at backtrack.</p>
 <p>Intended to be performant at scale but not use case optimized. If you want full optimization its best to implement your own fully specific to your use case using more performant structures like packed arrays. Memory is traded for computation - particularly to bound ccmplexity</p>
@@ -334,7 +369,7 @@
     <div class="section" id="6">
   <h1><a class="toc-backref" href="#6">Imports</a></h1>
   <dl class="item">
-    <a class="reference external" href="graphalg/util.html">graphalg/util</a>, <a class="reference external" href="graphalg/datastructures.html">graphalg/datastructures</a>
+    <a class="reference external" href="graphalg/util.html">graphalg/util</a>
   </dl>
 </div>
 <div class="section" id="7">
@@ -342,11 +377,11 @@
   <dl class="item">
     <div id="Direction">
   <dt><pre><a href="#Direction"><span class="Identifier">Direction</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
-  <span class="Identifier">dOutbound</span><span class="Other">,</span> <span class="Identifier">dInbound</span><span class="Other">,</span> <span class="Identifier">dAll</span></pre></dt>
+  <span class="Identifier">dOutbound</span><span class="Other">,</span> <span class="Identifier">dInbound</span><span class="Other">,</span> <span class="Identifier">dSelf</span><span class="Other">,</span> <span class="Identifier">dAll</span></pre></dt>
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L82" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L82" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L82" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
@@ -357,19 +392,29 @@
   <span class="Identifier">meta</span><span class="Operator">*</span><span class="Other">:</span> <span class="Identifier">M</span>                   <span class="Comment">## metadata, weights, applicability criteria etc</span></pre></dt>
   <dd>
     
-    edges to a vertex are stored both on the source and sink vertex. 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L55" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+    edges to a vertex are stored both on the source and sink vertex.
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L55" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L55" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 <div id="EdgeFilter">
-  <dt><pre><a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">E</span><span class="Other">]</span> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">e</span><span class="Other">:</span> <span class="Identifier">E</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span class="Identifier">closure</span><span class="Other">,</span> <span class="Identifier">nosideeffect</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">gcsafe</span></span>.}</pre></dt>
+  <dt><pre><a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">;</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <a href="#Filter"><span class="Identifier">Filter</span></a><span class="Other">[</span><a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span></pre></dt>
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L119" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L119" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L152" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L152" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="Filter">
+  <dt><pre><a href="#Filter"><span class="Identifier">Filter</span></a><span class="Other">[</span><span class="Identifier">T</span><span class="Other">]</span> <span class="Other">=</span> <span class="Keyword">object</span></pre></dt>
+  <dd>
+    
+    Filter items of type T matching predicate. By default, filter nothing.
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L131" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L131" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -380,8 +425,9 @@
     
     <p>Stores analysis and computation results</p>
 <p>The data types D and M should be hashable and lightweight or ref</p>
+<p>Note that basis, sccs and condensation depend on the vertices and edges that compose the graph. Many procedures/algorithms support filters, which exclude vertices and edges from a graph. Therefore, most caches are keyed on a hash which fingerprints the filter combination used to calculate the corresponding value.</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L94" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L94" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L94" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
@@ -391,7 +437,7 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L91" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L91" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L91" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
@@ -401,7 +447,7 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L88" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L88" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L88" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
@@ -415,18 +461,18 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L60" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L60" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L60" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 <div id="VertexFilter">
-  <dt><pre><a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">V</span><span class="Other">]</span> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <span class="Identifier">V</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span class="Identifier">closure</span><span class="Other">,</span> <span class="Identifier">noSideEffect</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">gcsafe</span></span>.}</pre></dt>
+  <dt><pre><a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">;</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <a href="#Filter"><span class="Identifier">Filter</span></a><span class="Other">[</span><a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span></pre></dt>
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L121" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L121" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L153" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L153" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -441,7 +487,7 @@
   <dd>
     
     dont brute for more edges
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg/fas.nim#L61" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg/fas.nim#L61" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg/fas.nim#L61" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
@@ -451,7 +497,7 @@
   <dd>
     
     dont brute for more vertices
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg/fas.nim#L62" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg/fas.nim#L62" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg/fas.nim#L62" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
@@ -461,7 +507,7 @@
   <dd>
     
     node count before we stop doing reorder passes
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg/fas.nim#L63" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg/fas.nim#L63" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
 <a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg/fas.nim#L63" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
@@ -478,8 +524,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L152" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L152" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L207" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L207" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -488,8 +534,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L130" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L130" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L185" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L185" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -498,8 +544,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L158" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L158" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L213" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L213" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -508,8 +554,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L146" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L146" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L201" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L201" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -521,41 +567,68 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L168" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L168" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L222" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L222" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="basis-procs-all">
+  <div id="basis,Graph[D,M],EdgeFilter[D,M],VertexFilter[D,M]">
+  <dt><pre><span class="Keyword">proc</span> <a href="#basis%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D"><span class="Identifier">basis</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">edgeFilter</span><span class="Other">:</span> <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span>
+    <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">;</span>      <span class="Comment">## no filter</span>
+                 <span class="Identifier">vertexFilter</span><span class="Other">:</span> <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span>
+    <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span></pre></dt>
+  <dd>
+    
+    <p>Iterate graph basis, derive it iteratively if required, cache result</p>
+<p>Find all sccs, filter source sccs, take first vertex from each</p>
+<p>Basis is defined as a set of vertices, from which all other vertices are reachable. A basis in minimal, but not unique (consider a cycle). Minimal means that no basis vertex may be reachable from any other by definition.</p>
+<p>A set of SCC are unique to a graph, and the edges+vertices included therein The basis shall change for filtered edges/vertices then. Provide filters </p>
+
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L911" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L911" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 
 </div>
 <div id="basis=-procs-all">
-  <div id="basis=,Graph,openArray[string]">
-  <dt><pre><span class="Keyword">proc</span> <a href="#basis%3D%2CGraph%2CopenArray%5Bstring%5D"><span class="Identifier">basis=</span></a><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">;</span> <span class="Identifier">vlabel</span><span class="Other">:</span> <span class="Identifier">openArray</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">)</span></pre></dt>
+  <div id="basis=,Graph[D,M],openArray[string],EdgeFilter[D,M],VertexFilter[D,M]">
+  <dt><pre><span class="Keyword">proc</span> <a href="#basis%3D%2CGraph%5BD%2CM%5D%2CopenArray%5Bstring%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D"><span class="Identifier">basis=</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">vlabel</span><span class="Other">:</span> <span class="Identifier">openArray</span><span class="Other">[</span><span class="Identifier">string</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">edgeFilter</span><span class="Other">:</span> <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span>
+    <span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span><a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">;</span> <span class="Comment">## no filter</span>
+                  <span class="Identifier">vertexFilter</span><span class="Other">:</span> <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span>
+    <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">)</span></pre></dt>
   <dd>
     
     <p>Set vertices with given labels as the basis, reset basis if empty argument</p>
 <p>This will supercede calculation of a basis by determining one by source SCCs</p>
 <p>Exception for basis vertices in graphs with multiple vertices of same label</p>
 <p>Its assumed the basis supplied is valid (all vertices in graph reachable via some basis vertex, no basis vertex reachable from any other)</p>
+<p>Labels are required to be unique to manually set the basis like this</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L744" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L744" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L879" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L879" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 
 </div>
 <div id="condensation-procs-all">
-  <div id="condensation,Graph[D,M]">
-  <dt><pre><span class="Keyword">proc</span> <a href="#condensation%2CGraph%5BD%2CM%5D"><span class="Identifier">condensation</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">[</span><a href="#SCC"><span class="Identifier">SCC</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">,</span> <a href="#NoData"><span class="Identifier">NoData</span></a><span class="Other">]</span></pre></dt>
+  <div id="condensation,Graph[D,M],EdgeFilter[D,M],VertexFilter[D,M]">
+  <dt><pre><span class="Keyword">proc</span> <a href="#condensation%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D"><span class="Identifier">condensation</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">edgeFilter</span><span class="Other">:</span> <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span>
+    <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">;</span> <span class="Identifier">vertexFilter</span><span class="Other">:</span> <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span>
+    <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">)</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">[</span><a href="#SCC"><span class="Identifier">SCC</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">,</span> <a href="#NoData"><span class="Identifier">NoData</span></a><span class="Other">]</span></pre></dt>
   <dd>
     
     <p>Take a graph and reduce it to an equivalen graph with one vertex per SCC</p>
 <p>Find all SCCs in graph. Generate a vertex for each. For all SCC outbound edges of SCC internal vertices, lookup the SCC they connect with. Given the two connected SCCs, add an edge between their SCC vertices.</p>
 <p>SCCs made of single vertices will have self edges if those vertices do. SCCs made of multiple vertices will have a self edge for every vertex that has a self edge</p>
+<p>SCCs dependant on the edges/vertices of the graph. Filters alter the SCCs. The condensation applies to the graphs full set of edges and vertices</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L671" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L671" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L788" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L788" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -567,8 +640,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L223" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L223" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L284" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L284" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -580,8 +653,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L217" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L217" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L278" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L278" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -593,8 +666,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L228" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L228" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L289" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L289" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -617,11 +690,12 @@
 </ul>
 <p>Algorithm</p>
 <ol class="simple"><li>Condense graph</li>
+<li>Accumulate FAS</li>
 </ol>
-<p>2) Accumulate FAS 2a) Iterate SCC topologically 2b) Generate FAS per SCC</p>
+<p>2a) Iterate SCC topologically 2b) Generate FAS per SCC</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg/fas.nim#L600" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg/fas.nim#L600" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg/fas.nim#L612" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg/fas.nim#L612" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -639,8 +713,8 @@
 <p>A none() return represents that no edge set was found meeting the constraints</p>
 <p>Any fas will include all self edges</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg/fas.nim#L548" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg/fas.nim#L548" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg/fas.nim#L556" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg/fas.nim#L556" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -657,8 +731,8 @@
 <p>Excepting singletons it is invariant that a SCC has at least one cycle. Any ordering shall have at least one back edge and meet the weakly connected criteria since any vertex is reachable from any other by definition.</p>
 <p>Note weakly connected does not account for edge direction.</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg/fas.nim#L533" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg/fas.nim#L533" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg/fas.nim#L539" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg/fas.nim#L539" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -670,8 +744,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg/fas.nim#L306" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg/fas.nim#L306" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg/fas.nim#L286" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg/fas.nim#L286" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -684,23 +758,25 @@
   <dd>
     
     Use ELS to generate ordering and then optimize it by making relocation passes to shift vertices to optimal gap. AKA iterative local search.
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg/fas.nim#L415" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg/fas.nim#L415" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg/fas.nim#L392" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg/fas.nim#L392" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 
 </div>
 <div id="flux-procs-all">
-  <div id="flux,Vertex[D,M],typeof(none[proc (x: Edge[D, M]): bool {.closure, noSideEffect, gcsafe.}]()),bool">
-  <dt><pre><span class="Keyword">proc</span> <a href="#flux%2CVertex%5BD%2CM%5D%2Ctypeof%28none%5Bproc%20%28x%3A%20Edge%5BD%2C%20M%5D%29%3A%20bool%20%7B.closure%2C%20noSideEffect%2C%20gcsafe.%7D%5D%28%29%29%2Cbool"><span class="Identifier">flux</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">efilter</span> <span class="Other">=</span> <span class="Identifier">none</span><span class="Other">[</span>
-    <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">x</span><span class="Other">:</span> <a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">bool</span> {.<span class="Identifier">closure</span><span class="Other">,</span> <span class="Identifier">noSideEffect</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">gcsafe</span></span>.}<span class="Other">]</span><span class="Other">(</span><span class="Other">)</span><span class="Other">;</span>
+  <div id="flux,Vertex[D,M],EdgeFilter[D,M],bool">
+  <dt><pre><span class="Keyword">proc</span> <a href="#flux%2CVertex%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2Cbool"><span class="Identifier">flux</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span>
+                <span class="Identifier">efilter</span><span class="Other">:</span> <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span><a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">;</span>
                 <span class="Identifier">countSelfEdges</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">)</span><span class="Other">:</span> <span class="Keyword">tuple</span><span class="Other">[</span><span class="Identifier">i</span><span class="Other">,</span> <span class="Identifier">o</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">]</span></pre></dt>
   <dd>
     
-    Find {in,out}degree efilter: when true filter the edge (the edge wont count toward the flux)
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L414" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L414" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <p>Find {in,out}degree</p>
+<p>efilter: when true filter the edge (the edge wont count toward the flux)</p>
+
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L499" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L499" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -712,8 +788,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L469" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L469" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L560" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L560" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -725,8 +801,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L202" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L202" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L261" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L261" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -735,8 +811,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L172" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L172" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L226" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L226" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -749,8 +825,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L164" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L164" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L219" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L219" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -762,8 +838,8 @@
   <dd>
     
     SCC with no vertices containing edges to or from an external vertex, may be multiple vertices
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L483" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L483" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L574" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L574" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -772,8 +848,8 @@
   <dd>
     
     Defined as vertex with no incoming or outgoing edges
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L479" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L479" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L570" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L570" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -786,8 +862,8 @@
   <dd>
     
     Lookup vertex by label break tie with data
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L454" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L454" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L540" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L540" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -798,8 +874,8 @@
     <p>Find a vertex in graph by data, tiebreak with label</p>
 <p>Given a data value find the vertex associated with that data, Supply a label to differentiate vertices with the same data where necessary.</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L433" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L433" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L519" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L519" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -811,21 +887,50 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L134" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L134" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L189" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L189" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 
 </div>
 <div id="resetBasis-procs-all">
-  <div id="resetBasis,Graph">
-  <dt><pre><span class="Keyword">proc</span> <a href="#resetBasis%2CGraph"><span class="Identifier">resetBasis</span></a><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">)</span></pre></dt>
+  <div id="resetBasis,Graph[D,M],EdgeFilter[D,M],VertexFilter[D,M]">
+  <dt><pre><span class="Keyword">proc</span> <a href="#resetBasis%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D"><span class="Identifier">resetBasis</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">edgeFilter</span><span class="Other">:</span> <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span>
+    <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">;</span>      <span class="Comment">## no filter</span>
+                      <span class="Identifier">vertexFilter</span><span class="Other">:</span> <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span>
+    <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">)</span></pre></dt>
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L764" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L764" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L872" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L872" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+
+</div>
+<div id="semanticHash-procs-all">
+  <div id="semanticHash,EdgeFilter,VertexFilter">
+  <dt><pre><span class="Keyword">proc</span> <a href="#semanticHash%2CEdgeFilter%2CVertexFilter"><span class="Identifier">semanticHash</span></a><span class="Other">(</span><span class="Identifier">x</span><span class="Other">:</span> <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">;</span> <span class="Identifier">y</span><span class="Other">:</span> <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Hash</span></pre></dt>
+  <dd>
+    
+    <p>Return a hash that represents the combined behavour of the given filters</p>
+<p>Where one filter is a noop then the hash of the other filter will be returned asis. Where both are noop then we will get the NONE_FILTER_HASH</p>
+<p>This is useful to cache results that depend on filters.</p>
+
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L162" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L162" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="semanticHash,VertexFilter,EdgeFilter">
+  <dt><pre><span class="Keyword">proc</span> <a href="#semanticHash%2CVertexFilter%2CEdgeFilter"><span class="Identifier">semanticHash</span></a><span class="Other">(</span><span class="Identifier">x</span><span class="Other">:</span> <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">;</span> <span class="Identifier">y</span><span class="Other">:</span> <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Hash</span></pre></dt>
+  <dd>
+    
+    
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L175" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L175" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -837,8 +942,8 @@
   <dd>
     
     Single vertex that may or may not connect to other sccs
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L494" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L494" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L586" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L586" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -850,8 +955,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L476" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L476" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L567" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L567" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -863,8 +968,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L473" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L473" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L564" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L564" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -876,31 +981,14 @@
 <div class="section" id="15">
   <h1><a class="toc-backref" href="#15">Iterators</a></h1>
   <dl class="item">
-    <div id="basis-iterators-all">
-  <div id="basis.i,Graph">
-  <dt><pre><span class="Keyword">iterator</span> <a href="#basis.i%2CGraph"><span class="Identifier">basis</span></a><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">M</span><span class="Other">]</span> {.<span class="Identifier">closure</span>.}</pre></dt>
-  <dd>
-    
-    <p>Iterate graph basis, derive it iteratively if required, cache result</p>
-<p>Find all sccs, filter source sccs, take first vertex from each</p>
-<p>Basis is defined as a set of vertices, from which all other vertices are reachable. A basis in minimal, but not unique (consider a cycle). Minimal means that no basis vertex may be reachable from any other by definition.</p>
-<p>A set of SCC are unique to a graph.</p>
-
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L771" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L771" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
-
-  </dd>
-</div>
-
-</div>
-<div id="bfs-iterators-all">
+    <div id="bfs-iterators-all">
   <div id="bfs.i,Vertex">
   <dt><pre><span class="Keyword">iterator</span> <a href="#bfs.i%2CVertex"><span class="Identifier">bfs</span></a><span class="Other">(</span><span class="Identifier">anchor</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Vertex</span></pre></dt>
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L393" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L393" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L477" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L477" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -909,64 +997,65 @@
   <dd>
     
     Assumes basis is valid (all vertices reachable from basis, no basis vertex reachable from any other)
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L407" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L407" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L492" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L492" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 
 </div>
 <div id="dfs-iterators-all">
-  <div id="dfs.i,Vertex[D,M],Option[EdgeFilter[Edge[D,M]]],Option[VertexFilter[Vertex[D,M]]],bool">
-  <dt><pre><span class="Keyword">iterator</span> <a href="#dfs.i%2CVertex%5BD%2CM%5D%2COption%5BEdgeFilter%5BEdge%5BD%2CM%5D%5D%5D%2COption%5BVertexFilter%5BVertex%5BD%2CM%5D%5D%5D%2Cbool"><span class="Identifier">dfs</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">anchor</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">edgeFilter</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span>
-    <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span><span class="Other">]</span> <span class="Other">=</span> <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span><span class="Other">.</span><span class="Identifier">none</span><span class="Other">(</span><span class="Other">)</span><span class="Other">;</span> <span class="Identifier">vertexFilter</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span>
-    <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">none</span><span class="Other">[</span><a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span><span class="Other">]</span><span class="Other">(</span><span class="Other">)</span><span class="Other">;</span>
-                   <span class="Identifier">undirected</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> {.<span class="Identifier">closure</span>.}</pre></dt>
+  <div id="dfs.i,Vertex[D,M],EdgeFilter[D,M],VertexFilter[D,M],bool">
+  <dt><pre><span class="Keyword">iterator</span> <a href="#dfs.i%2CVertex%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D%2Cbool"><span class="Identifier">dfs</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">anchor</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">edgeFilter</span><span class="Other">:</span> <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span>
+    <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">;</span> <span class="Identifier">vertexFilter</span><span class="Other">:</span> <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span>
+    <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">;</span> <span class="Identifier">undirected</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> {.<span class="Identifier">closure</span>.}</pre></dt>
   <dd>
     
-    <p>Emit vertices in DFS visitation order, ignoring filtered edges</p>
+    <p>Emit vertices in DFS visitation order, ignoring filtered edges or vertices</p>
 <p>Visitation order dependant on order of the vertices iterable. A -&gt; B -&gt; C with iterable in order &quot;ABC&quot; visits in order &quot;ABC&quot;. &quot;BAC&quot; in order &quot;BCA&quot;.</p>
 <p>Visitation order for A-&gt;B-&gt;{C,D} is A, B, D, C</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L347" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L347" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L431" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L431" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
-<div id="dfs.i,Graph[D,M],Option[EdgeFilter[Edge[D,M]]],Option[VertexFilter[Vertex[D,M]]],bool">
-  <dt><pre><span class="Keyword">iterator</span> <a href="#dfs.i%2CGraph%5BD%2CM%5D%2COption%5BEdgeFilter%5BEdge%5BD%2CM%5D%5D%5D%2COption%5BVertexFilter%5BVertex%5BD%2CM%5D%5D%5D%2Cbool"><span class="Identifier">dfs</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">graph</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">edgeFilter</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span><span class="Other">]</span> <span class="Other">=</span> <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span>
-    <a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span><span class="Other">.</span><span class="Identifier">none</span><span class="Other">(</span><span class="Other">)</span><span class="Other">;</span> <span class="Identifier">vertexFilter</span><span class="Other">:</span> <span class="Identifier">Option</span><span class="Other">[</span><a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">none</span><span class="Other">[</span>
-    <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span><span class="Other">]</span><span class="Other">(</span><span class="Other">)</span><span class="Other">;</span> <span class="Identifier">undirected</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> {.
-    <span class="Identifier">closure</span>.}</pre></dt>
+<div id="dfs.i,Graph[D,M],EdgeFilter[D,M],VertexFilter[D,M],bool">
+  <dt><pre><span class="Keyword">iterator</span> <a href="#dfs.i%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D%2CVertexFilter%5BD%2CM%5D%2Cbool"><span class="Identifier">dfs</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">graph</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">edgeFilter</span><span class="Other">:</span> <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span>
+    <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">;</span> <span class="Identifier">vertexFilter</span><span class="Other">:</span> <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span>
+    <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">;</span> <span class="Identifier">undirected</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> {.<span class="Identifier">closure</span>.}</pre></dt>
   <dd>
     
     Assumes basis is valid (all vertices reachable from basis, no basis vertex reachable from any other)
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L381" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L381" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L465" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L465" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 
 </div>
 <div id="edges-iterators-all">
-  <div id="edges.i,Graph[D,M]">
-  <dt><pre><span class="Keyword">iterator</span> <a href="#edges.i%2CGraph%5BD%2CM%5D"><span class="Identifier">edges</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">direction</span> <span class="Other">=</span> <span class="Identifier">dOutbound</span><span class="Other">)</span><span class="Other">:</span> <a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span></pre></dt>
+  <div id="edges.i,Graph[D,M],EdgeFilter[D,M]">
+  <dt><pre><span class="Keyword">iterator</span> <a href="#edges.i%2CGraph%5BD%2CM%5D%2CEdgeFilter%5BD%2CM%5D"><span class="Identifier">edges</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">direction</span> <span class="Other">=</span> <span class="Identifier">dOutbound</span><span class="Other">;</span>
+                     <span class="Identifier">filter</span><span class="Other">:</span> <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span><a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">)</span><span class="Other">:</span> <a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span>
+    <span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span></pre></dt>
   <dd>
     
     All edges in graph. Note that outbound edge A-&gt;B will be outbound for A, and inbound for B. All edges are outbound for some vertex and vice versa. dAll then will iterate over the full set of edges twice
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L247" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L247" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L324" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L324" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
-<div id="edges.i,Vertex[D,M],Direction">
-  <dt><pre><span class="Keyword">iterator</span> <a href="#edges.i%2CVertex%5BD%2CM%5D%2CDirection"><span class="Identifier">edges</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">direction</span><span class="Other">:</span> <a href="#Direction"><span class="Identifier">Direction</span></a> <span class="Other">=</span> <span class="Identifier">dOutbound</span><span class="Other">)</span><span class="Other">:</span> <a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span>
-    <span class="Identifier">M</span><span class="Other">]</span></pre></dt>
+<div id="edges.i,Vertex[D,M],Direction,EdgeFilter[D,M]">
+  <dt><pre><span class="Keyword">iterator</span> <a href="#edges.i%2CVertex%5BD%2CM%5D%2CDirection%2CEdgeFilter%5BD%2CM%5D"><span class="Identifier">edges</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">direction</span><span class="Other">:</span> <a href="#Direction"><span class="Identifier">Direction</span></a> <span class="Other">=</span> <span class="Identifier">dOutbound</span><span class="Other">;</span>
+                     <span class="Identifier">filter</span><span class="Other">:</span> <a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span><a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">)</span><span class="Other">:</span> <a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span>
+    <span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span></pre></dt>
   <dd>
     
     Iterate edges
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L232" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L232" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L293" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L293" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -978,21 +1067,21 @@
   <dd>
     
     Yield vertices that connect to none other than themselves
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L737" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L737" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L865" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L865" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 
 </div>
 <div id="items-iterators-all">
-  <div id="items.i,Graph">
-  <dt><pre><span class="Keyword">iterator</span> <a href="#items.i%2CGraph"><span class="Identifier">items</span></a><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">M</span><span class="Other">]</span></pre></dt>
+  <div id="items.i,Graph,VertexFilter">
+  <dt><pre><span class="Keyword">iterator</span> <a href="#items.i%2CGraph%2CVertexFilter"><span class="Identifier">items</span></a><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">;</span> <span class="Identifier">f</span><span class="Other">:</span> <a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">M</span><span class="Other">]</span></pre></dt>
   <dd>
     
     Vertices in graph in an unspecified order
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L212" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L212" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L272" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L272" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1001,8 +1090,8 @@
   <dd>
     
     Vertices in SCC in an unspecified order
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L208" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L208" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L267" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L267" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1013,22 +1102,38 @@
   <dt><pre><span class="Keyword">iterator</span> <a href="#neighbours.i%2CVertex%2CDirection"><span class="Identifier">neighbours</span></a><span class="Other">(</span><span class="Identifier">v</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">;</span> <span class="Identifier">d</span><span class="Other">:</span> <a href="#Direction"><span class="Identifier">Direction</span></a> <span class="Other">=</span> <span class="Identifier">dOutbound</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Vertex</span></pre></dt>
   <dd>
     
-    Neighbours reachable from, that reach to vertex or both
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L255" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L255" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <p>Neighbours reachable from, that reach to vertex or both, include self edges</p>
+<p>Neighbours reachable from multiple edges will be yielded more than once</p>
+
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L336" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L336" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 
 </div>
 <div id="sccs-iterators-all">
-  <div id="sccs.i,Graph">
-  <dt><pre><span class="Keyword">iterator</span> <a href="#sccs.i%2CGraph"><span class="Identifier">sccs</span></a><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">)</span><span class="Other">:</span> <a href="#SCC"><span class="Identifier">SCC</span></a><span class="Other">[</span><span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">M</span><span class="Other">]</span></pre></dt>
+  <div id="sccs.i,Graph,typeof(default(EdgeFilter[Graph.D, Graph.M])),typeof(default(VertexFilter[Graph.D, Graph.M]))">
+  <dt><pre><span class="Keyword">iterator</span> <a href="#sccs.i%2CGraph%2Ctypeof%28default%28EdgeFilter%5BGraph.D%2C%20Graph.M%5D%29%29%2Ctypeof%28default%28VertexFilter%5BGraph.D%2C%20Graph.M%5D%29%29"><span class="Identifier">sccs</span></a><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">;</span> <span class="Identifier">efilter</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span><a href="#EdgeFilter"><span class="Identifier">EdgeFilter</span></a><span class="Other">[</span><span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">;</span> <span class="Comment">## filter edges, default filters none</span>
+              <span class="Identifier">vfilter</span> <span class="Other">=</span> <span class="Identifier">default</span><span class="Other">(</span><a href="#VertexFilter"><span class="Identifier">VertexFilter</span></a><span class="Other">[</span><span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">M</span><span class="Other">]</span><span class="Other">)</span><span class="Other">)</span><span class="Other">:</span> <a href="#SCC"><span class="Identifier">SCC</span></a><span class="Other">[</span><span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">D</span><span class="Other">,</span>
+    <span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">M</span><span class="Other">]</span></pre></dt>
   <dd>
     
-    Iterate SCC of graph, return cached result if necessary
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L634" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L634" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <p>Iterate SCC of graph, with caching layer. No filters passed will not filter any vertices/edges.</p>
+<p>Different edge filters produce differing SCC, and therefore the calculation is cached on a semanticHash of the filters combined</p>
+
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L733" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L733" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
+  </dd>
+</div>
+<div id="sccs.i,Graph,Hash">
+  <dt><pre><span class="Keyword">iterator</span> <a href="#sccs.i%2CGraph%2CHash"><span class="Identifier">sccs</span></a><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">;</span> <span class="Identifier">filterSemanticHash</span><span class="Other">:</span> <span class="Identifier">Hash</span><span class="Other">)</span><span class="Other">:</span> <a href="#SCC"><span class="Identifier">SCC</span></a><span class="Other">[</span><span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">Graph</span><span class="Other">.</span><span class="Identifier">M</span><span class="Other">]</span></pre></dt>
+  <dd>
+    
+    Cached result lookup
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L728" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L728" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1040,8 +1145,8 @@
   <dd>
     
     
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L731" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L731" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L859" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L859" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1055,22 +1160,22 @@
     <p>Sources are all nodes that may not be reached from another (no incoming edges) and that have edges out to another node.</p>
 <p>Vertices with self edges  only are not considered sources</p>
 
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L721" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L721" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L849" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L849" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
 
 </div>
 <div id="toposort-iterators-all">
-  <div id="toposort.i,Graph[D,M],HashSet[Edge[D,M]],bool">
-  <dt><pre><span class="Keyword">iterator</span> <a href="#toposort.i%2CGraph%5BD%2CM%5D%2CHashSet%5BEdge%5BD%2CM%5D%5D%2Cbool"><span class="Identifier">toposort</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">fas</span><span class="Other">:</span> <span class="Identifier">HashSet</span><span class="Other">[</span><a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">initHashSet</span><span class="Other">[</span>
-    <a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span><span class="Other">(</span><span class="Other">)</span><span class="Other">;</span> <span class="Identifier">reverse</span><span class="Other">:</span> <span class="Identifier">bool</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span></pre></dt>
+  <div id="toposort.i,Graph[D,M],HashSet[Edge[D,M]]">
+  <dt><pre><span class="Keyword">iterator</span> <a href="#toposort.i%2CGraph%5BD%2CM%5D%2CHashSet%5BEdge%5BD%2CM%5D%5D"><span class="Identifier">toposort</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">g</span><span class="Other">:</span> <a href="#Graph"><span class="Identifier">Graph</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">;</span> <span class="Identifier">fas</span><span class="Other">:</span> <span class="Identifier">HashSet</span><span class="Other">[</span><a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span> <span class="Other">=</span> <span class="Identifier">initHashSet</span><span class="Other">[</span>
+    <a href="#Edge"><span class="Identifier">Edge</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span><span class="Other">]</span><span class="Other">(</span><span class="Other">)</span><span class="Other">)</span><span class="Other">:</span> <a href="#Vertex"><span class="Identifier">Vertex</span></a><span class="Other">[</span><span class="Identifier">D</span><span class="Other">,</span> <span class="Identifier">M</span><span class="Other">]</span></pre></dt>
   <dd>
     
-    Topologically sort DAG.
-    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.0.0/src/graphalg.nim#L815" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
-<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L815" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+    Topologically sort DAG where FAS pruned
+    <a href="https://github.com/WaywardWizard/nim-graphalg.git/tree/1.2.0/src/graphalg.nim#L984" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/WaywardWizard/nim-graphalg.git/edit/devel/src/graphalg.nim#L984" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
 
   </dd>
 </div>
@@ -1086,7 +1191,7 @@
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-12 11:01:28 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2026-07-17 20:43:19 UTC</small>
       </div>
     </div>
   </div>
