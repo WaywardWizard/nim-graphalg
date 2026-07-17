@@ -42,8 +42,8 @@
 ## with the same label and data may exist.
 import std/[tables, deques, math, sets, sugar, hashes, strutils, sequtils]
 import std/[options, math]
-import graphalg/[util,BiMap]
-import combinatronics
+import graphalg/[util]
+import combinatronics, datastructures/bimap
 
 const NONE_FILTER_HASH: Hash = 0
 type
