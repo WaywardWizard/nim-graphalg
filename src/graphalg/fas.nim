@@ -635,8 +635,8 @@ proc fas*(g: Graph): HashSet[Edge[Graph.D, Graph.M]] =
   ## Algorithm
   ## 1) Condense graph
   ## 2) Accumulate FAS
-  ## 2a) Iterate SCC topologically
-  ## 2b) Generate FAS per SCC
+  ##   2a) Iterate SCC topologically
+  ##   2b) Generate FAS per SCC
   var
     scc: SCC[Graph.D, Graph.M]
     cumulator: HashSet[Edge[Graph.D, Graph.M]]
