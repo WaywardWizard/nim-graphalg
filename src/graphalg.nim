@@ -237,6 +237,8 @@ proc mapVertexLookup[D, M](g: Graph[D, M], vx: Vertex[D, M]) =
     let labels =
       # labels of vertices with equivalent data
       # labels of vertices with equivalent data
+      # labels of vertices with equivalent data
+      # labels of vertices with equivalent data
       iterator (): string =
         yield g.dataToVertex[vx.data].label
         for v in g.dataToVertexOverflow.getOrDefault(vx.data):
