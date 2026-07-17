@@ -110,5 +110,7 @@ task prepush, "Check valid to push":
 
 task gitsetup, "Setup push hooks, formatter ignores":
   exec "git config --local blame.ignoreRevsFile .git-blame-ignore-revs"
+  exec "touch .git-blame-ignore-revs"
+  exec "git add .git-blame-ignore-revs"
   let ppp = ".git/hooks/pre-push"
   exec &"cp {ppp}{{.sample,}};chmod +x {ppp};echo \"nimble prepush\">{ppp}"
