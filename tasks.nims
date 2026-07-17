@@ -13,7 +13,8 @@ var
 
 type Shellcmd = distinct string
 var nimdocShArgs: seq[tuple[argname,value: string, validator:Peg]] = @[
-  ("git.url", "git remote get-url origin",peg"^https\:\/\/github\.com"), # git url
+  #TODO strip .git part
+  ("git.url", "git remote get-url origin|sed 's/\\.git$//'",peg"^https\:\/\/github\.com"), # git url
   ("git.commit", "git describe --tags --abbrev=0", peg"v?\d+(\.\d+)*"), # extract tag matching docs
 ]
 var nimdocArgs: seq[tuple[argname,value: string, validator:Peg]] = @[
@@ -83,15 +84,15 @@ task ghpage, "Query status of github pages page for repo":
 
 import std/strbasics
 let nphv = (gorgeEx "nph --version").output.strip
-  
+
 task format, "Format code previously comitted unformatted":
   ## Usually, this should be done by the person writing code. This is retrospective
-  ## 
+  ##
   ## If there is uncommitted changes to source, then the user should commit these
   ## first.
   if (gorgeEx "git status -s |awk '{print $2}'|grep '.nim$'").exitCode == 0: # found edited nim
     raise ValueError.newException "Commit your source edits first"
-    
+
   exec "git ls-files|grep '.nim$'|xargs -rn1 nph"
   let (altNim, altNimExit) = gorgeEx "git status -s |awk '{print $2}'|grep '.nim$'"
   if altNimExit==0: # changes were made so a commit is needed
