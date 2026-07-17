@@ -32,10 +32,10 @@ task mkdocs, "Generate HTML documentation":
 
   let cmds = @[
     &"rm -rf {docfolder}", # start fresh
-    &"fd -g *.md | xargs -r nim md2html {docarg} --index:only", # idx
-    &"fd -g *.md | xargs -r nim md2html {docarg} --index:off", # html
-    &"nim doc {docarg} --index:only --project src/*.nim", # idx
-    &"nim doc {docarg} --index:off --project src/*.nim", # html
+    &"fd -g *.md | xargs -r nimble md2html {docarg} --index:only", # idx
+    &"fd -g *.md | xargs -r nimble md2html {docarg} --index:off", # html
+    &"nimble doc {docarg} --index:only --project src/*.nim", # idx
+    &"nimble doc {docarg} --index:off --project src/*.nim", # html
     # ghpages needs an index.html, all doc pages (hardcode) link to theindex.html
     &"cd {docfolder}; ln -s theindex.html index.html"]
   for c in cmds: c.exec
