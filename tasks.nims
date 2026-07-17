@@ -80,3 +80,35 @@ task rmghpage, "Remove github page":
   exec "gh api --method DELETE repos/{owner}/{repo}/pages"
 task ghpage, "Query status of github pages page for repo":
   exec "gh api repos/{owner}/{repo}/pages"
+
+import std/strbasics
+let nphv = (gorgeEx "nph --version").output.strip
+  
+task format, "Format code previously comitted unformatted":
+  ## Usually, this should be done by the person writing code. This is retrospective
+  ## 
+  ## If there is uncommitted changes to source, then the user should commit these
+  ## first.
+  if (gorgeEx "git status -s |awk '{print $2}'|grep '.nim$'").exitCode == 0: # found edited nim
+    raise ValueError.newException "Commit your source edits first"
+    
+  exec "git ls-files|grep '.nim$'|xargs -rn1 nph"
+  let (altNim, altNimExit) = gorgeEx "git status -s |awk '{print $2}'|grep '.nim$'"
+  if altNimExit==0: # changes were made so a commit is needed
+    exec(&"git commit -m \"Formatted with nph {nphv}\" {altnim.splitlines.join \" \"}")
+    # git config --global blame.ignoreRevsFile .git-blame-ignore-revs
+    exec &"echo \"Formatted with nph {nphv}\" >> .git-blame-ignore-revs"
+    exec "git rev-parse HEAD >> .git-blame-ignore-revs"
+    exec "git commit -m \"blame ignore\" .git-blame-ignore-revs"
+
+task prepush, "Check valid to push":
+  let (edited, nimSourceEditedIfZero) = (gorgeEx "git status -s|awk '{print $2}'|grep '.nim$'")
+  exec "nimble check" # nimble valid
+  if nimSourceEditedIfZero == 0:
+    exec "nimble test"  # tests pass
+    exec "nph --check "& edited.splitlines.join(" ")
+
+task gitsetup, "Setup push hooks, formatter ignores":
+  exec "git config --local blame.ignoreRevsFile .git-blame-ignore-revs"
+  let ppp = ".git/hooks/pre-push"
+  exec &"cp {ppp}{{.sample,}};chmod +x {ppp};echo \"nimble prepush\">{ppp}"
