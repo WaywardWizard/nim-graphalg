@@ -41,7 +41,7 @@ import std/[options, sets, algorithm, sequtils, enumerate, lists]
 import datastructures
 
 type
-  ConnectivityConstraint  = enum
+  ConnectivityConstraint = enum
     ## Connectivity constraints place restriction on state of a graph (set of
     ## vertices). Their purpose is to add requirements to feedback arc setsv
     ccAcyclic ## No cycles exist in group of vertice
@@ -62,11 +62,9 @@ const BRUTE_EDGES* = 20 ## dont brute for more edges
 const BRUTE_VERTICES* = 10 ## dont brute for more vertices
 const JUST_ELS* = 3000 ## node count before we stop doing reorder passes
 
-type
-  VertexOrdering[V: Vertex] = object
-    ## Vertices indexed 1..N and vice versa
-    m: BiMap[V, int] # vertex to index, index to vertex
-    biggest: int = -1 #
+type VertexOrdering[V: Vertex] = object ## Vertices indexed 1..N and vice versa
+  m: BiMap[V, int] # vertex to index, index to vertex
+  biggest: int = -1 #
 
 proc `[]`(x: VertexOrdering, v: VertexOrdering.V | int): int | VertexOrdering.V =
   ## Forward/reverse lookup on ordering
@@ -102,7 +100,7 @@ proc initVertexOrdering[T: Vertex](vertices: Iterable[T]): VertexOrdering[T] =
 
 proc `swap`(x: var VertexOrdering, p, q: int) {.inline.} = # 6x hash, lookup
   ## Swap two vertices in the ordering
-  x.m.swap(p,q)
+  x.m.swap(p, q)
 
 iterator items(x: VertexOrdering): VertexOrdering.V =
   ## Iterate items of ordering in order
@@ -137,7 +135,9 @@ proc moveto(x: var VertexOrdering, p, q: int) =
 
   x[q] = movee
 
-proc fas(ordering: VertexOrdering): HashSet[Edge[VertexOrdering.V.D, VertexOrdering.V.M]] =
+proc fas(
+    ordering: VertexOrdering
+): HashSet[Edge[VertexOrdering.V.D, VertexOrdering.V.M]] =
   ## Extract feedback arc set from ordering
   ##
   ## The feedback arc set shall be defined as all edges that lead to a vertex
@@ -146,8 +146,9 @@ proc fas(ordering: VertexOrdering): HashSet[Edge[VertexOrdering.V.D, VertexOrder
   for ix, el in enumerate(ordering):
     for edge in el.outbound:
       # ignore edges to vertices not contained in ordering
-      if edge.inbound notin ordering: continue
-      if ordering[edge.inbound] < ix+1: # orderings are one based
+      if edge.inbound notin ordering:
+        continue
+      if ordering[edge.inbound] < ix + 1: # orderings are one based
         result.incl edge
     # selfedges
     for e in el.selfedges:
@@ -298,16 +299,13 @@ proc reorderPass[T: VertexOrdering](x: var T) =
   type
     Nio = object # neighbour indices
       edgeto, edgefrom: seq[int] # edgeto leads to neighbour
+
     V = T.V
 
   # track vertices processed then moved forward (which scanner will revisit)
   # dont track all processed nodes, just ones forwarded into path of scan
   var preprocessed: HashSet[V]
-  proc process(
-      vo: var T,
-      scanIndex: int,
-      preprocessed: var HashSet[V] = preprocessed,
-  ) =
+  proc process(vo: var T, scanIndex: int, preprocessed: var HashSet[V] = preprocessed) =
     ## check gaps for vertex at scanIndex position of ordering and move to best
     ##
     ## Where forwarding the vertex;
@@ -382,35 +380,45 @@ proc reorderPass[T: VertexOrdering](x: var T) =
   for scanIndex in 1 .. x.biggest:
     x.process(scanIndex)
 
-proc fasOptimizedEadesLinSmith[T:Vertex](
+proc fasOptimizedEadesLinSmith[T: Vertex](
     vertices: Iterable[T], passes = 3, # Optimization passes
-): HashSet[Edge[T.D,T.M]] =
-  var ordering: VertexOrdering[T]= vertices.initVertexOrdering[:T]() # O(V+E) refs
+): HashSet[Edge[T.D, T.M]] =
+  var ordering: VertexOrdering[T] = initVertexOrdering[T](vertices) # O(V+E) refs
   ordering.eadesLinSmith() # O(V+E)
   for ix in 1 .. passes:
     ordering.reorderPass()
   return ordering.fas()
 
-proc fasOptimizedEadesLinSmith*(graph: Graph, passes=3): HashSet[Edge[Graph.D,Graph.M]] =
+proc fasOptimizedEadesLinSmith*(
+    graph: Graph, passes = 3
+): HashSet[Edge[Graph.D, Graph.M]] =
   ## Use ELS to generate ordering and then optimize it by making relocation passes
   ## to shift vertices to optimal gap. AKA iterative local search.
   graph.vertices.fasOptimizedEadesLinSmith(passes)
 
-proc test[D,M](constraint: ConnectivityConstraint, g: Graph[D,M], fas: HashSet[Edge[D,M]]=initHashSet[Edge[D,M]]()): bool =
+proc test[D, M](
+    constraint: ConnectivityConstraint,
+    g: Graph[D, M],
+    fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]](),
+): bool =
   ## Test if graph satisfies constraint where given FAS applied
   ##
   ## ccAcyclic will leverage cached SCC computation
   ##
   case constraint
   of ccAcyclic:
-    let efilter: EdgeFilter[D,M] = EdgeFilter[D,M](
+    let efilter: EdgeFilter[D, M] = EdgeFilter[D, M](
       semanticHash: fas.hash,
-      predicate: some(proc(x: Edge[D,M]): bool {.closure,nosideeffect,gcsafe.} = x in fas)
+      predicate: some(
+        proc(x: Edge[D, M]): bool {.closure, nosideeffect, gcsafe.} =
+          x in fas
+      ),
     )
     # Acyclic every SCC is a singleton (no multi-vertex SCC => no cycle) and no
     # singleton has a self edge
-    for c in g.sccs(efilter= efilter):
-      if c.vertices.len>1: return false # more than one vertex in an scc is a cycle
+    for c in g.sccs(efilter = efilter):
+      if c.vertices.len > 1:
+        return false # more than one vertex in an scc is a cycle
       if c.vertices.chooseAny.selfEdges.len > 0:
         # filterIt keeps items *fulfilling* the predicate, the filter is the opposite
         if c.vertices.chooseAny.selfEdges.filterIt(not efilter(it)).len > 0:
@@ -442,17 +450,22 @@ proc test[D, M](
   ## any exit vertex. This is the most restrictive constraint. The brute force
   ## search space can be restricted by identifying forced edges. These are the
   ## edges that must exist for vertex A to reach B regardless of the path taken
-  let efilter = EdgeFilter[D,M](
+  let efilter = EdgeFilter[D, M](
     semanticHash: hash(fas),
-    predicate:  some(proc(x: Edge[D, M]): bool = x in fas)
+    predicate: some(
+      proc(x: Edge[D, M]): bool =
+        x in fas
+    ),
   )
   case constraint
   of ccAcyclic: # O(V+E)
     # Acyclic iff every SCC is a singleton (no multi-vertex SCC => no cycle)
     # and no singleton has a self edge
     for c in sccs[Vertex[D, M]](s.vertices, efilter):
-      if c.vertices.len > 1: return false
-      if c.vertices.chooseAny.selfEdges.filterIt(not efilter(it)).len > 0: return false
+      if c.vertices.len > 1:
+        return false
+      if c.vertices.chooseAny.selfEdges.filterIt(not efilter(it)).len > 0:
+        return false
     return true
   of ccWeak: # O(V+E)
     var length = 0
@@ -484,7 +497,7 @@ proc bruteVertexOrdering[T: Vertex](
     s: SCC[T.D, T.M], constraints: set[ConnectivityConstraint] = {}
 ): Option[VertexOrdering[T]] =
   if s.singleton(): # base case
-    return some(s.vertices.initVertexOrdering[:T]())
+    return some(initVertexOrdering[T](s.vertices))
   var
     usage = fac(len(s.vertices))
     seen: HashSet[T]
@@ -513,17 +526,19 @@ proc bruteVertexOrdering[T: Vertex](
         minimum = card(backedges)
         bestOrder = VertexOrdering[T]()
         for (ix, e) in enumerate(ordering):
-          bestOrder[ix+1] = e # vertex orderings are 1 indexed not 0
+          bestOrder[ix + 1] = e # vertex orderings are 1 indexed not 0
 
     seen.clear
     backedges.clear
 
-  if minimum < int.high: return some(bestOrder)  # FAS matching constraints found
-  else: return none(VertexOrdering[T]) # No FAS located
+  if minimum < int.high:
+    return some(bestOrder) # FAS matching constraints found
+  else:
+    return none(VertexOrdering[T]) # No FAS located
 
 proc fasBruteVertexOrdering*(
     scc: SCC, constraints: set[ConnectivityConstraint] = {}
-): Option[HashSet[Edge[SCC.D,SCC.M]]] =
+): Option[HashSet[Edge[SCC.D, SCC.M]]] =
   ## Brute force MFAS through left to right vertex ordering for all vertex O(V!)
   ## orderings, enumerate back edges.
   ##
@@ -532,13 +547,15 @@ proc fasBruteVertexOrdering*(
   ## criteria since any vertex is reachable from any other by definition.
   ##
   ## Note weakly connected does not account for edge direction.
-  var order = scc.bruteVertexOrdering[:Vertex[SCC.D,SCC.M]](constraints)
-  if order.issome(): result = order.get().fas.some()
-  else: result = none[HashSet[Edge[SCC.D,SCC.M]]]()
+  var order = bruteVertexOrdering[Vertex[SCC.D, SCC.M]](scc, constraints)
+  if order.issome():
+    result = order.get().fas.some()
+  else:
+    result = none[HashSet[Edge[SCC.D, SCC.M]]]()
 
 proc fasBruteEdgeset*(
     s: SCC, constraints: set[ConnectivityConstraint] = {}
-): Option[HashSet[Edge[SCC.D,SCC.M]]] =
+): Option[HashSet[Edge[SCC.D, SCC.M]]] =
   ## Brute force MFAS through trying edge set combinations O(2^E).
   ##
   ## Additional conditions for the FAS can be imposed
@@ -549,12 +566,14 @@ proc fasBruteEdgeset*(
   ##
   ## Any fas will include all self edges
   # combinator expects an openArray; collect edges into a seq first
-  var edges: seq[Edge[SCC.D,SCC.M]]
-  var selfedges: HashSet[Edge[SCC.D,SCC.M]]
-  var thisEdgeset: HashSet[Edge[SCC.D,SCC.M]]
+  var edges: seq[Edge[SCC.D, SCC.M]]
+  var selfedges: HashSet[Edge[SCC.D, SCC.M]]
+  var thisEdgeset: HashSet[Edge[SCC.D, SCC.M]]
   for v in s.vertices:
-    for e in v.outbound: edges.add e
-    for e in v.selfedges: selfedges.incl e
+    for e in v.outbound:
+      edges.add e
+    for e in v.selfedges:
+      selfedges.incl e
 
   for edgeset in edges.combinator:
     thisEdgeset = selfedges
@@ -571,8 +590,7 @@ proc fasBruteEdgeset*(
           break
       if passed == constraints.len: #
         return some(thisedgeset)
-  return none(HashSet[Edge[SCC.D,SCC.M]])
-
+  return none(HashSet[Edge[SCC.D, SCC.M]])
 
 proc pickFasAlgorithm(s: SCC): FasStrategy =
   ## Brute force or Eades-Lin-Smith depending on SCC size
@@ -583,12 +601,15 @@ proc pickFasAlgorithm(s: SCC): FasStrategy =
   for x in s.vertices:
     M += len(x.outbound) # set of outbound encompasses all inbound
 
-  if M <= BRUTE_EDGES: return fsBruteEdgeset
-  if N <= BRUTE_VERTICES: return fsBruteVertexOrder
-  if N > JUST_ELS: return fsEls
+  if M <= BRUTE_EDGES:
+    return fsBruteEdgeset
+  if N <= BRUTE_VERTICES:
+    return fsBruteVertexOrder
+  if N > JUST_ELS:
+    return fsEls
   return fsElsReorder
 
-proc fas*(g: Graph): HashSet[Edge[Graph.D,Graph.M]] =
+proc fas*(g: Graph): HashSet[Edge[Graph.D, Graph.M]] =
   ## Derive a close to or minimal feedback arc set (FAS)
   ##
   ## This is done by finding a graphs condensation, iterating over the strongly
@@ -617,8 +638,8 @@ proc fas*(g: Graph): HashSet[Edge[Graph.D,Graph.M]] =
   ## 2a) Iterate SCC topologically
   ## 2b) Generate FAS per SCC
   var
-    scc: SCC[Graph.D,Graph.M]
-    cumulator: HashSet[Edge[Graph.D,Graph.M]]
+    scc: SCC[Graph.D, Graph.M]
+    cumulator: HashSet[Edge[Graph.D, Graph.M]]
 
   for vx in g.condensation().vertices:
     scc = vx.data
@@ -628,9 +649,13 @@ proc fas*(g: Graph): HashSet[Edge[Graph.D,Graph.M]] =
     else:
       cumulator.incl:
         case scc.pickFasAlgorithm
-          of fsEls: scc.vertices.fasEadesLinSmith[:Vertex[Graph.D,Graph.M]]()
-          of fsElsReorder: scc.vertices.fasOptimizedEadesLinSmith[:Vertex[Graph.D,Graph.M]](passes=3)
-          of fsBruteVertexOrder: (scc.fasBruteVertexOrdering()).get()
-          of fsBruteEdgeset: scc.fasBruteEdgeset().get()
+        of fsEls:
+          fasEadesLinSmith[Vertex[Graph.D, Graph.M]](scc.vertices)
+        of fsElsReorder:
+          fasOptimizedEadesLinSmith[Vertex[Graph.D, Graph.M]](scc.vertices, passes = 3)
+        of fsBruteVertexOrder:
+          (scc.fasBruteVertexOrdering()).get()
+        of fsBruteEdgeset:
+          scc.fasBruteEdgeset().get()
 
   return cumulator

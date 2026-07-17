@@ -48,10 +48,9 @@ import combinatronics, datastructures/bimap
 const NONE_FILTER_HASH: Hash = 0
 type
   ## There is an items iterator defined for the type
-  Iterable[T] =
-    concept x
-      for element in x:
-        element is T
+  Iterable[T] = concept x
+    for element in x:
+      element is T
 
   Edge*[D, M] = ref object
     ## edges to a vertex are stored both on the source and sink vertex.
@@ -67,7 +66,7 @@ type
     # self edges but each arc set construction will have then a different edge
     # instance to represent the same edge. We declare self edges as edge instances
     # so they are be canonical.
-    selfEdges*: seq[Edge[D,M]] # suppord multiple self edges
+    selfEdges*: seq[Edge[D, M]] # suppord multiple self edges
 
   StronglyConnectedComponent[D, M] = ref object # root can be any node.
     vertices*: HashSet[Vertex[D, M]]
@@ -102,34 +101,37 @@ type
     ## exclude vertices and edges from a graph. Therefore, most caches are keyed
     ## on a hash which fingerprints the filter combination used to calculate the
     ## corresponding value.
-    vertices*: OrderedSet[Vertex[D,M]] # all vertices, ordered for reproducibility
+    vertices*: OrderedSet[Vertex[D, M]] # all vertices, ordered for reproducibility
 
-    basisCache: Table[Hash,seq[Vertex[D,M]]] # basis vertices, supercedes calculation
+    basisCache: Table[Hash, seq[Vertex[D, M]]]
+      # basis vertices, supercedes calculation
 
       ## hash values of edge filter semantic hashes to track SCCs for different
       ## prunings. The case for the SCC calculated  with no edge filter will be
       ## a "zero" value hash
-    sccsCache: Table[Hash, seq[SCC[D,M]]] ## \
+    sccsCache: Table[Hash, seq[SCC[D, M]]]
+      ## \
       ## Cached SCC calculations. Hash will represent some combination of filters
       ## used to prune (ignore edges) when the SCC was calculated
 
     # Where multiple vertices contain the same data they are differentiated by label
-    dataToVertex: Table[D, Vertex[D,M]]
-    labelToVertex: Table[string, Vertex[D,M]]
-    dataToVertexOverflow: Table[D, seq[Vertex[D,M]]]
-    labelToVertexOverflow: Table[string,seq[Vertex[D,M]]]
+    dataToVertex: Table[D, Vertex[D, M]]
+    labelToVertex: Table[string, Vertex[D, M]]
+    dataToVertexOverflow: Table[D, seq[Vertex[D, M]]]
+    labelToVertexOverflow: Table[string, seq[Vertex[D, M]]]
 
-    vertexToScc: Table[Hash, Table[Vertex[D,M], SCC[D,M]]]
+    vertexToScc: Table[Hash, Table[Vertex[D, M], SCC[D, M]]]
 
     # One vertex per SCC, edges between vertices of SCCs link them.
     # The condensation you get is dependant on the edgeset you use. The table
     # key represents the edgeset used to generate the SCCs, and thus the condensation
     # that derives
-    condensationCache: Table[Hash, Graph[SCC[D,M], NoData]]
+    condensationCache: Table[Hash, Graph[SCC[D, M], NoData]]
 
   Filter*[T] = object
     ## Filter items of type T matching predicate. By default, filter nothing.
-    semanticHash: Hash = NONE_FILTER_HASH ## \
+    semanticHash: Hash = NONE_FILTER_HASH
+      ## \
       ## Filters with the same semantic hash are equivalent
       ## 
       ## Enables caching calculation results that are a function of a filter. 
@@ -143,16 +145,19 @@ type
       ## Some gotchas, if you fold a vertex filter into an edge filter, then only
       ## provide the edge filter as a dual purpose, then the semantic hash you set
       ## should be equivalent to that of which semanticHash_ would yield.
-    predicate: Option[proc(x: T): bool {.closure, nosideeffect, gcsafe.}] ## \
+    predicate: Option[proc(x: T): bool {.closure, nosideeffect, gcsafe.}]
+      ## \
       ## Where issome() and returns true, item x will be filtered
-  EdgeFilter*[D,M] = Filter[Edge[D,M]]
-  VertexFilter*[D,M] = Filter[Vertex[D,M]]
+
+  EdgeFilter*[D, M] = Filter[Edge[D, M]]
+  VertexFilter*[D, M] = Filter[Vertex[D, M]]
 
 {.experimental: "callOperator".}
 proc `()`(x: Filter, y: Filter.T): bool {.inline.} =
   if x.predicate.issome():
     (x.predicate.get())(y)
-  else: false # no predicate, filter none default
+  else:
+    false # no predicate, filter none default
 
 proc semanticHash*(x: EdgeFilter, y: VertexFilter): Hash =
   ## Return a hash that represents the combined behavour of the given filters
@@ -161,16 +166,21 @@ proc semanticHash*(x: EdgeFilter, y: VertexFilter): Hash =
   ## asis. Where both are noop then we will get the NONE_FILTER_HASH
   ##
   ## This is useful to cache results that depend on filters.
-  if x.predicate.isnone(): return y.semanticHash
-  if y.predicate.isnone(): return x.semanticHash
+  if x.predicate.isnone():
+    return y.semanticHash
+  if y.predicate.isnone():
+    return x.semanticHash
   result = !$(x.semanticHash !& y.semanticHash) # mix, in order
-proc semanticHash*(x: VertexFilter, y: EdgeFilter): Hash = y.semanticHash x
+
+proc semanticHash*(x: VertexFilter, y: EdgeFilter): Hash =
+  y.semanticHash x
 
 proc hash[T: ref](x: T): Hash {.inline.} =
   ## the value of x is a memory address since it is a ref type
   cast[Hash](x)
 
-proc selfEdge(e: Edge): bool {.inline.} = e.outbound == e.inbound
+proc selfEdge(e: Edge): bool {.inline.} =
+  e.outbound == e.inbound
 
 proc `$`*(g: Graph): string =
   for v in g.vertices.items:
@@ -209,7 +219,6 @@ proc `$`*(s: SCC): string =
 proc initVertex*[D, M = NoData](label: string, data: D = default(D)): Vertex[D, M] =
   Vertex[D, M](label: label, data: data)
 
-
 proc add*[D, M](g: Graph[D, M], v: Vertex[D, M]) =
   g.vertices.incl v
   g.mapVertexLookup v
@@ -225,7 +234,9 @@ proc mapVertexLookup[D, M](g: Graph[D, M], vx: Vertex[D, M]) =
   ## Require label and data combination is unique
 
   if vx.data in g.dataToVertex: # data indice overflow, assert label unique
-    let labels = # labels of vertices with equivalent data
+    let labels =
+      # labels of vertices with equivalent data
+      # labels of vertices with equivalent data
       iterator (): string =
         yield g.dataToVertex[vx.data].label
         for v in g.dataToVertexOverflow.getOrDefault(vx.data):
@@ -243,21 +254,24 @@ proc mapVertexLookup[D, M](g: Graph[D, M], vx: Vertex[D, M]) =
   if vx.label in g.labelToVertex: # make sure data tiebreaks
     g.labelToVertexOverflow.mgetOrPut(vx.label).add vx
   else:
-    g.labelToVertex[vx.label]=vx
+    g.labelToVertex[vx.label] = vx
+
 proc initGraph*[D, M](v: iterator (): Vertex[D, M]): Graph[D, M] =
   # More flexible iterator
-  result = Graph[D,M]()
+  result = Graph[D, M]()
   for vx in v():
     result.add vx
 
 iterator items*(x: SCC): Vertex[SCC.D, SCC.M] =
   ## Vertices in SCC in an unspecified order
-  for v in x.vertices: yield v
+  for v in x.vertices:
+    yield v
 
-iterator items*(g: Graph, f: VertexFilter): Vertex[Graph.D,Graph.M] =
+iterator items*(g: Graph, f: VertexFilter): Vertex[Graph.D, Graph.M] =
   ## Vertices in graph in an unspecified order
   for v in g.vertices:
-    if not f(v): yield v
+    if not f(v):
+      yield v
 
 proc connectTo*[D, M](vfrom, vto: Vertex[D, M], meta: M = default(M)) =
   # Creates an edge from one vertex to another
@@ -271,31 +285,45 @@ proc connectFrom*[D, M](vto, vfrom: Vertex[D, M], meta: M = default(M)) =
   vto.inbound.add e
 
 proc connectToSelf*(x: Vertex, meta: Vertex.M = default[Vertex.M](Vertex.M)) =
-  let e = Edge[Vertex.D, Vertex.M](outbound:x,inbound:x,meta:meta)
+  let e = Edge[Vertex.D, Vertex.M](outbound: x, inbound: x, meta: meta)
   x.selfEdges.add e
 
-iterator edges*[D, M](v: Vertex[D, M], direction: Direction = dOutbound, filter: EdgeFilter[D,M]=default(EdgeFilter[D,M])): Edge[D, M] =
+iterator edges*[D, M](
+    v: Vertex[D, M],
+    direction: Direction = dOutbound,
+    filter: EdgeFilter[D, M] = default(EdgeFilter[D, M]),
+): Edge[D, M] =
   ## Iterate edges
   let f = filter
   case direction
   of dOutbound:
     for e in v.outbound:
-      if not f(e): yield e
+      if not f(e):
+        yield e
   of dInbound:
     for e in v.inbound:
-      if not f(e): yield e
+      if not f(e):
+        yield e
   of dSelf:
     for e in v.selfEdges:
-      if not f(e): yield e
+      if not f(e):
+        yield e
   of dAll:
     for e in v.outbound:
-      if not f(e): yield e
+      if not f(e):
+        yield e
     for e in v.inbound:
-      if not f(e): yield e
+      if not f(e):
+        yield e
     for e in v.selfEdges:
-      if not f(e): yield e
+      if not f(e):
+        yield e
 
-iterator edges*[D, M](g: Graph[D, M], direction = dOutbound, filter: EdgeFilter[D,M] = default(EdgeFilter[D,M])): Edge[D, M] =
+iterator edges*[D, M](
+    g: Graph[D, M],
+    direction = dOutbound,
+    filter: EdgeFilter[D, M] = default(EdgeFilter[D, M]),
+): Edge[D, M] =
   ## All edges in graph. Note that outbound edge A->B will be outbound for A,
   ## and inbound for B. All edges are outbound for some vertex and vice versa.
   ## dAll then will iterate over the full set of edges twice
@@ -322,12 +350,13 @@ iterator neighbours*(v: Vertex, d: Direction = dOutbound): Vertex =
       yield e.inbound
     for e in v.inbound:
       yield e.outbound
-    for e in v.selfEdges: yield v
+    for e in v.selfEdges:
+      yield v
 
 iterator walkDfs[D, M](
     vertices: iterable[Vertex[D, M]] | iterator (): Vertex[D, M],
-    edgeFilter: EdgeFilter[D,M] = default(EdgeFilter[D,M]), ## no filter
-    vertexFilter: VertexFilter[D,M] = default(VertexFilter[D,M]),
+    edgeFilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]), ## no filter
+    vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]),
 ): tuple[entry: int, edge: Edge[D, M]] =
   ## Walk edges in DFS order. emitting on entry and exit
   ##
@@ -351,7 +380,8 @@ iterator walkDfs[D, M](
   var
     path: seq[Edge[D, M]] # path through tree to current node in processing
     seen: HashSet[Vertex[D, M]] # entered vertices
-    keepEdge = proc(e: Edge[D, M]): bool = not edgeFilter(e) and not vertexFilter(e.inbound)
+    keepEdge = proc(e: Edge[D, M]): bool =
+      not edgeFilter(e) and not vertexFilter(e.inbound)
     stack: seq[Edge[D, M]]
     # queue root edges
   for v in vertices:
@@ -418,20 +448,24 @@ iterator dfs*[D, M](
     seen.incl cursor
     yield cursor
     for edge in cursor.outbound: # Edges from node
-      if edgeFilter(edge) or vertexFilter(edge.inbound): continue
-      if edge.inbound notin seen: stack.add edge.inbound
+      if edgeFilter(edge) or vertexFilter(edge.inbound):
+        continue
+      if edge.inbound notin seen:
+        stack.add edge.inbound
 
     if undirected: # Include backwards traversal of edges
       for edge in cursor.inbound:
-        if edgeFilter(edge) or vertexFilter(edge.outbound): continue
-        if edge.outbound notin seen: stack.add edge.outbound
+        if edgeFilter(edge) or vertexFilter(edge.outbound):
+          continue
+        if edge.outbound notin seen:
+          stack.add edge.outbound
 
 iterator dfs*[D, M](
-  graph: Graph[D, M],
-  edgeFilter: EdgeFilter[D,M] = default(EdgeFilter[D,M]),
-  vertexFilter: VertexFilter[D,M] = default(VertexFilter[D,M]),
-  undirected: bool = false
-): Vertex[D,M] {.closure.} =
+    graph: Graph[D, M],
+    edgeFilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]),
+    vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]),
+    undirected: bool = false,
+): Vertex[D, M] {.closure.} =
   ## Assumes basis is valid (all vertices reachable from basis, no basis vertex
   ## reachable from any other)
   for v in graph.basis:
@@ -452,6 +486,7 @@ iterator bfs*(anchor: Vertex): Vertex =
       if edge.inbound notin seen:
         q.addLast edge.inbound
         seen.incl edge.inbound
+
 iterator bfs*(graph: Graph): Vertex[Graph.D, Graph.M] =
   ## Assumes basis is valid (all vertices reachable from basis, no basis vertex
   ## reachable from any other)
@@ -461,21 +496,23 @@ iterator bfs*(graph: Graph): Vertex[Graph.D, Graph.M] =
 
 proc flux*[D, M](
     v: Vertex[D, M],
-    efilter: EdgeFilter[D,M] = default(EdgeFilter[D,M]),
-    countSelfEdges: bool = true
+    efilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]),
+    countSelfEdges: bool = true,
 ): tuple[i, o: int] =
   ## Find {in,out}degree
   ## 
   ## efilter: when true filter the edge (the edge wont count toward the flux)
   for e in v.outbound:
-    if not efilter(e): result.o += 1
+    if not efilter(e):
+      result.o += 1
   for e in v.inbound:
-    if not efilter(e): result.i += 1
+    if not efilter(e):
+      result.i += 1
   if countSelfEdges:
     for e in v.selfEdges:
       if not efilter(e):
-        result.i+=1
-        result.o+=1
+        result.i += 1
+        result.o += 1
 
 proc lookup*[D, M](g: Graph[D, M], d: D, label = none[string]()): Vertex[D, M] =
   ## Find a vertex in graph by data, tiebreak with label
@@ -498,14 +535,19 @@ proc lookup*[D, M](g: Graph[D, M], d: D, label = none[string]()): Vertex[D, M] =
   else:
     return g.dataToVertex[d]
 
-proc lookup*(g: Graph, label: string, data=none[Graph.D]()): Vertex[Graph.D,Graph.M] =
+proc lookup*(
+    g: Graph, label: string, data = none[Graph.D]()
+): Vertex[Graph.D, Graph.M] =
   ## Lookup vertex by label break tie with data
   if label in g.labelToVertexOverflow:
     if data.isnone():
       raise ValueError.newException "Multiple vertices of same label and no data given to differentiate"
-    let vxs = iterator(): Vertex[Graph.D,Graph.M] =
-      yield g.labelToVertex[label]
-      for vx in g.labelToVertexOverflow.getOrDefault(label): yield vx
+    let vxs =
+      iterator (): Vertex[Graph.D, Graph.M] =
+        yield g.labelToVertex[label]
+        for vx in g.labelToVertexOverflow.getOrDefault(label):
+          yield vx
+
     for vx in vxs:
       if vx.data == data.get():
         return vx
@@ -545,8 +587,8 @@ proc singleton*(scc: SCC): bool {.inline.} =
 
 iterator sccs[V: Vertex](
     vertices: Iterable[V],
-    efilter: EdgeFilter[V.D,V.M] = default(EdgeFilter[V.D,V.M]),
-    vfilter: VertexFilter[V.D,V.M] = default(VertexFilter[V.D,V.M])
+    efilter: EdgeFilter[V.D, V.M] = default(EdgeFilter[V.D, V.M]),
+    vfilter: VertexFilter[V.D, V.M] = default(VertexFilter[V.D, V.M]),
 ): SCC[V.D, V.M] =
   ## Return all SCCs discoverable from given vertices. Uses iterative implementation
   ## of Tarjans SCC.
@@ -639,7 +681,8 @@ iterator sccs[V: Vertex](
       # From anchor explore edges to unseen nodes
       seen.incl anchor
       for eg in anchor.outbound:
-        if efilter(eg): continue # ignore edges marked as pruned
+        if efilter(eg):
+          continue # ignore edges marked as pruned
         if not vfilter(eg.inbound) and eg.inbound notin seen:
           dfs.add eg
           seen.incl eg.inbound
@@ -655,7 +698,8 @@ iterator sccs[V: Vertex](
         discover v # we are visiting v, the node  the edge steps to
 
         for e in v.outbound: # node edges
-          if efilter(e): continue
+          if efilter(e):
+            continue
           var w = e.inbound # w is a child of v (an edge goes v->w)
           if not vfilter(w) and w notin seen: # undiscovered (tree edge)
             dfs.add e
@@ -679,14 +723,15 @@ iterator sccs[V: Vertex](
           while path.len > 0 and (dfsCompletePathNotEmpty() or pathOverExtended()):
             backtrack path.pop()
 
-iterator sccs*(g: Graph, filterSemanticHash: Hash): SCC[Graph.D,Graph.M] =
+iterator sccs*(g: Graph, filterSemanticHash: Hash): SCC[Graph.D, Graph.M] =
   ## Cached result lookup
-  for s in g.sccsCache[filterSemantichash]: yield s
-    
+  for s in g.sccsCache[filterSemantichash]:
+    yield s
+
 iterator sccs*(
     g: Graph,
-    efilter = default(EdgeFilter[Graph.D,Graph.M]), ## filter edges, default filters none
-    vfilter = default(VertexFilter[Graph.D,Graph.M]), ## filter vertices, default filters none
+    efilter = default(EdgeFilter[Graph.D, Graph.M]), ## filter edges, default filters none
+    vfilter = default(VertexFilter[Graph.D, Graph.M]), ## filter vertices, default filters none
 ): SCC[Graph.D, Graph.M] =
   ## Iterate SCC of graph, with caching layer. No filters passed will not filter
   ## any vertices/edges.
@@ -707,10 +752,11 @@ iterator sccs*(
       yield c
 
 proc whichScc[D, M](
-  g: Graph[D, M],
-  vertex: Vertex[D, M],
-  efilter: EdgeFilter[D,M] = default(EdgeFilter[D,M]),
-  vfilter: VertexFilter[D,M] = default(VertexFilter[D,M])): SCC[D, M] =
+    g: Graph[D, M],
+    vertex: Vertex[D, M],
+    efilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]),
+    vfilter: VertexFilter[D, M] = default(VertexFilter[D, M]),
+): SCC[D, M] =
   ## Given a vertex in the graph find the SCC it is in. 
   ## 
   ## Calculate answer if required and cache 
@@ -723,9 +769,10 @@ proc whichScc[D, M](
   ## Implementation for support of other SCC is not required yet. If this were
   ## to be done then rather than passing a cache key one should pass edge/vertex
   ## filters.
-  let semHash: Hash = semanticHash(efilter,vfilter)
+  let semHash: Hash = semanticHash(efilter, vfilter)
   if semHash in g.vertexToScc: # cache hit
-    assert (vertex in g.vertexToScc[semHash]), "Vertex not known or filtered/unreachable"
+    assert (vertex in g.vertexToScc[semHash]),
+      "Vertex not known or filtered/unreachable"
     return g.vertexToScc[semHash][vertex]
   else: # miss. find all sccs (if not cached) and map all vertices to SCCs
     for scc in g.sccs(efilter, vfilter): # resolve to iterator not field
@@ -733,12 +780,14 @@ proc whichScc[D, M](
       for v in scc:
         var t = g.vertexToScc.getOrDefault(semHash)
         t[v] = scc
-        if vertex == v: result = scc
+        if vertex == v:
+          result = scc
 
-proc condensation*[D, M](g: Graph[D, M],
-  edgeFilter: EdgeFilter[D,M] = default(EdgeFilter[D,M]),
-  vertexFilter: VertexFilter[D,M] = default(VertexFilter[D,M])
-): Graph[SCC[D,M],NoData] =
+proc condensation*[D, M](
+    g: Graph[D, M],
+    edgeFilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]),
+    vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]),
+): Graph[SCC[D, M], NoData] =
   ## Take a graph and reduce it to an equivalen graph with one vertex per SCC
   ##
   ## Find all SCCs in graph. Generate a vertex for each. For all SCC outbound
@@ -751,13 +800,14 @@ proc condensation*[D, M](g: Graph[D, M],
   ##
   ## SCCs dependant on the edges/vertices of the graph. Filters alter the SCCs.
   ## The condensation applies to the graphs full set of edges and vertices
-  let cachekey = semanticHash(edgeFilter,vertexFilter)
+  let cachekey = semanticHash(edgeFilter, vertexFilter)
   if cachekey in g.condensationCache:
     return g.condensationCache[cacheKey]
   else: # generate condensation
     # create vertices
     var condensationTable = collect:
-      for c in g.sccs(edgeFilter,vertexFilter): # The vertices of condensation are SCCs of graph
+      for c in g.sccs(edgeFilter, vertexFilter):
+        # The vertices of condensation are SCCs of graph
         {c: Vertex[SCC[D, M], NoData](label: $c, data: c)}
 
     g.condensationCache[cacheKey] = Graph[SCC[D, M], NoData]()
@@ -769,7 +819,8 @@ proc condensation*[D, M](g: Graph[D, M],
       # during Tarjans SCC and must scan the vertices of the SCC
       for v in scc:
         for e in v.outbound:
-          if e.inbound in scc.vertices: continue # intrascc
+          if e.inbound in scc.vertices:
+            continue # intrascc
           let peer = g.whichScc(e.inbound, edgeFilter, vertexFilter)
           if peer == scc:
             assert false # we already caught the intrascc case above
@@ -786,10 +837,7 @@ proc condensation*[D, M](g: Graph[D, M],
 
     return g.condensationCache[cacheKey]
 
-iterator sources[T: Vertex](
-    v: Iterable[T],
-    filter: EdgeFilter[T.D,T.M],
-): T =
+iterator sources[T: Vertex](v: Iterable[T], filter: EdgeFilter[T.D, T.M]): T =
   ## iterate sources in vertex iterator with edges matching filter ignored
   for vx in v:
     var flux = vx.flux(filter)
@@ -812,21 +860,25 @@ iterator sinks*(g: Graph): Vertex[Graph.D, Graph.M] =
     if flux.i > 0 and flux.o == 0:
       yield v
 
-iterator isolated*(g: Graph): Vertex[Graph.D,Graph.M] =
+iterator isolated*(g: Graph): Vertex[Graph.D, Graph.M] =
   ## Yield vertices that connect to none other than themselves
   for v in g.vertices:
-    var flux = v.flux(countSelfEdges=false)
+    var flux = v.flux(countSelfEdges = false)
     if flux.i == 0 and flux.o == 0:
       yield v
 
-proc resetBasis*[D,M](g: Graph[D,M],
-  edgeFilter: EdgeFilter[D,M] = default(EdgeFilter[D,M]), ## no filter
-  vertexFilter: VertexFilter[D,M] = default(VertexFilter[D,M])
-) = g.basisCache.del semanticHash(edgeFilter,vertexFilter)
+proc resetBasis*[D, M](
+    g: Graph[D, M],
+    edgeFilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]), ## no filter
+    vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]),
+) =
+  g.basisCache.del semanticHash(edgeFilter, vertexFilter)
 
-proc `basis=`*[D,M](g: Graph[D,M], vlabel: openArray[string], 
-  edgeFilter: EdgeFilter[D,M] = default(EdgeFilter[D,M]), ## no filter
-  vertexFilter: VertexFilter[D,M] = default(VertexFilter[D,M])
+proc `basis=`*[D, M](
+    g: Graph[D, M],
+    vlabel: openArray[string],
+    edgeFilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]), ## no filter
+    vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]),
 ) =
   ## Set vertices with given labels as the basis, reset basis if empty argument
   ##
@@ -838,24 +890,27 @@ proc `basis=`*[D,M](g: Graph[D,M], vlabel: openArray[string],
   ## some basis vertex, no basis vertex reachable from any other)
   ## 
   ## Labels are required to be unique to manually set the basis like this
-  let filterCacheKey = semanticHash(edgeFilter,vertexFilter)
+  let filterCacheKey = semanticHash(edgeFilter, vertexFilter)
   if vlabel.len == 0:
     g.resetBasis edgeFilter, vertexFilter
     return
 
   g.basisCache[filterCacheKey] = @[]
   for l in vlabel:
-    g.basisCache[filterCacheKey].add g.lookup(label=l)
+    g.basisCache[filterCacheKey].add g.lookup(label = l)
 
 proc chooseAny(x: HashSet): HashSet.A =
   for xx in x:
     return xx
-proc chooseAnyVertex(scc: SCC): Vertex[SCC.D,SCC.M] = scc.vertices.chooseAny
 
-proc basis*[D,M](g: Graph[D,M],
-  edgeFilter: EdgeFilter[D,M] = default(EdgeFilter[D,M]), ## no filter
-  vertexFilter: VertexFilter[D,M] = default(VertexFilter[D,M])
-): seq[Vertex[D,M]] =
+proc chooseAnyVertex(scc: SCC): Vertex[SCC.D, SCC.M] =
+  scc.vertices.chooseAny
+
+proc basis*[D, M](
+    g: Graph[D, M],
+    edgeFilter: EdgeFilter[D, M] = default(EdgeFilter[D, M]), ## no filter
+    vertexFilter: VertexFilter[D, M] = default(VertexFilter[D, M]),
+): seq[Vertex[D, M]] =
   ## Iterate graph basis, derive it iteratively if required, cache result
   ##
   ## Find all sccs, filter source sccs, take first vertex from each
@@ -883,10 +938,9 @@ proc basis*[D,M](g: Graph[D,M],
         g.basisCache[cacheKey].add s
 
       return g.basisCache[cacheKey]
-
     else: # Not a condensation graph
       # var gcondensed: graphalg.Graph[SCC[Graph.D,Graph.M],NoData] = (g.condensation[:Graph.D,Graph.M](filterCacheKey))
-      var gcondensed = (g.condensation[:D,M](edgeFilter,vertexFilter))
+      var gcondensed = (condensation[D, M](g, edgeFilter, vertexFilter))
       for v in gcondensed.vertices:
         if v.source:
           let avertex = v.data.chooseAnyVertex
@@ -898,34 +952,35 @@ proc basis*[D,M](g: Graph[D,M],
 
       return g.basisCache[cacheKey]
 
-iterator kahn[D,M](
-  g: Graph[D,M],
-  fas: HashSet[Edge[D,M]]=initHashSet[Edge[D,M]]()
-): Vertex[D,M] =
+iterator kahn[D, M](
+    g: Graph[D, M], fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]]()
+): Vertex[D, M] =
   ## Emit vertices in an ordering determined by kahns algorithm. Vertices in loops will not be emitted as they dont reach indeg 0
-  let ef: EdgeFilter[D,M] = EdgeFilter[D,M](semanticHash: fas.hash, predicate: some((e:Edge[D,M])=>e in fas))
-  var vfluxin: BiMapSeq[int, Vertex[D,M]]
+  let ef: EdgeFilter[D, M] = EdgeFilter[D, M](
+    semanticHash: fas.hash, predicate: some((e: Edge[D, M]) => e in fas)
+  )
+  var vfluxin: BiMapSeq[int, Vertex[D, M]]
   for v in g.vertices:
-    let d = v.flux(eFilter=ef).i
-    vfluxin[d]=v
+    let d = v.flux(eFilter = ef).i
+    vfluxin[d] = v
 
   while 0 in vfluxin:
     let v = vfluxin.pop(0)
     yield v
     for e in v.edges(dOutbound):
-      if ef(e): continue
-      let 
+      if ef(e):
+        continue
+      let
         neigh = e.inbound
         neighIndeg = vfluxin.find(e.inbound)
       # change indeg of neigh down one, it lost this edge
-      vfluxin.rekey(e.inbound,neighIndeg-1)
-      
+      vfluxin.rekey(e.inbound, neighIndeg - 1)
+
 include graphalg/fas
 
 # O(V+E)
 iterator toposort*[D, M](
-    g: Graph[D, M],
-    fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]](),
+    g: Graph[D, M], fas: HashSet[Edge[D, M]] = initHashSet[Edge[D, M]]()
 ): Vertex[D, M] =
   ## Topologically sort DAG where FAS pruned
   if not (ccAcyclic.test(g, fas)): # O(V+E)

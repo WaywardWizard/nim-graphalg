@@ -28,22 +28,44 @@ var
     Z
 
 let
-  bases = [(g0,@["A"]),(g1,@["A"]), (g2,@["A","L","M","N"]), (g3, @["A"]), (g4,@["A"]), (g5, @["Z"])]
-  scc = [(g0,3), (g1,10), (g2, 10), (g3,1), (g4,2)]
-  isolatedSccs = [(g0, 0), (g1, 0), (g2,3), (g3, 1), (g4,0)]
-  singletonSccs = [(g0, 3), (g1,10), (g2,9), (g3, 1), (g4,1)]
+  bases = [
+    (g0, @["A"]),
+    (g1, @["A"]),
+    (g2, @["A", "L", "M", "N"]),
+    (g3, @["A"]),
+    (g4, @["A"]),
+    (g5, @["Z"]),
+  ]
+  scc = [(g0, 3), (g1, 10), (g2, 10), (g3, 1), (g4, 2)]
+  isolatedSccs = [(g0, 0), (g1, 0), (g2, 3), (g3, 1), (g4, 0)]
+  singletonSccs = [(g0, 3), (g1, 10), (g2, 9), (g3, 1), (g4, 1)]
   # Note that a mFAS is not unique, consider a simple SCC loop, any edge breaks it
-  minFas = [(g2,@[("G","I")]),(g0,@[]), (g1,@[]),  (g3,@[("A","A")]), (g4,@[("B","C")]), (g5,@[])]
-  gsinks = [(g0,1),(g1,2),(g2,1),(g3,0), (g4,0)]
-  gsources = [(g0,1),(g1,1),(g2,1),(g3,0),(g4,1)]
-  sourceLabels = [(g0,@["A"]),(g1,@["A"]),(g2,@["A"]),(g3,@[]),(g4,@["A"])]
-  sinkLabels = [(g0,@["C"]),(g1,@["I","J"]),(g2,@["J"]),(g3,@[]),(g4,@[])]
-  elsOrderAndFas = [(g3,("A",@[("A","A")])),(g0,("ABC",@[])),(g1,("ACEDFBHGIJ",@[])),(g2,("ACDBHIEFGLMNJ",@[("G","I")])),(g4,("ACDB",@[("B","C")])),(g5,("Z",@[]))]
-  gkahn = [(g0,"ABC"), (g1,"ACEDFGBHJI"),(g2,"LMNACDBHJ"),(g3,""), (g4,"A")]
-  gtopo = [(g0,"ABC"), (g1,"ACEDFGBHJI"),(g2,"LMNGACDBHJIEF"),(g3,"A"), (g4,"CDAB")]
+  minFas = [
+    (g2, @[("G", "I")]),
+    (g0, @[]),
+    (g1, @[]),
+    (g3, @[("A", "A")]),
+    (g4, @[("B", "C")]),
+    (g5, @[]),
+  ]
+  gsinks = [(g0, 1), (g1, 2), (g2, 1), (g3, 0), (g4, 0)]
+  gsources = [(g0, 1), (g1, 1), (g2, 1), (g3, 0), (g4, 1)]
+  sourceLabels = [(g0, @["A"]), (g1, @["A"]), (g2, @["A"]), (g3, @[]), (g4, @["A"])]
+  sinkLabels = [(g0, @["C"]), (g1, @["I", "J"]), (g2, @["J"]), (g3, @[]), (g4, @[])]
+  elsOrderAndFas = [
+    (g3, ("A", @[("A", "A")])),
+    (g0, ("ABC", @[])),
+    (g1, ("ACEDFBHGIJ", @[])),
+    (g2, ("ACDBHIEFGLMNJ", @[("G", "I")])),
+    (g4, ("ACDB", @[("B", "C")])),
+    (g5, ("Z", @[])),
+  ]
+  gkahn = [(g0, "ABC"), (g1, "ACEDFGBHJI"), (g2, "LMNACDBHJ"), (g3, ""), (g4, "A")]
+  gtopo =
+    [(g0, "ABC"), (g1, "ACEDFGBHJI"), (g2, "LMNGACDBHJIEF"), (g3, "A"), (g4, "CDAB")]
 
-
-for (g,b) in bases: g.basis = b
+for (g, b) in bases:
+  g.basis = b
 
 template listVisits[V: Vertex](itr: iterable[V]): string =
   let tmp = collect:
@@ -138,10 +160,10 @@ suite "Unit":
     check len(g2.basis()) == 4
 
   test "Sources":
-    for (g,n) in gsources:
+    for (g, n) in gsources:
       check g.sources().toSeq.len == n
   test "Sinks":
-    for (g,n) in gsinks:
+    for (g, n) in gsinks:
       check g.sinks.toSeq.len == n
 
   test "DFS":
@@ -163,6 +185,7 @@ suite "Unit":
       iterator (): Vertex[string, NoData] =
         for b in g1.basis:
           yield b
+
     ):
       cx += 1
     check cx == 18
@@ -177,31 +200,39 @@ suite "Unit":
     check cx == 18
 
   test "Sources iterator":
-    for (g,s) in sourceLabels:
-      var slabels = collect(for s in g.sources: s.label)
+    for (g, s) in sourceLabels:
+      var slabels = collect(
+        for s in g.sources:
+          s.label
+      )
       check (s.toHashSet() -+- slabels.toHashSet).card == 0
   test "Sinks iterator":
-    for (g,s) in sinkLabels:
-      var slabels = collect(for s in g.sinks: s.label)
+    for (g, s) in sinkLabels:
+      var slabels = collect(
+        for s in g.sinks:
+          s.label
+      )
       check (s.toHashSet() -+- slabels.toHashSet).card == 0
-
 
 suite "Integration":
   test "Cycles / Finding strongly connected components":
-    for (g,n) in scc:
+    for (g, n) in scc:
       check g.sccs.toseq.len == n
 
   test "Condensation":
-    for (g,n) in scc:
+    for (g, n) in scc:
       var
         byCondensation = collect:
-          for v in g.condensation().vertices: {$v}
+          for v in g.condensation().vertices:
+            {$v}
         byCycle = collect:
-          for c in g.sccs: {$c}
+          for c in g.sccs:
+            {$c}
 
       # cycle returns same list of grouped labels that condensation does
       check (byCondensation -+- byCycle).len() == 0
-      check g.condensation().edges(dOutbound).toSeq.len == g.condensation().edges(dInbound).toSeq.len
+      check g.condensation().edges(dOutbound).toSeq.len ==
+        g.condensation().edges(dInbound).toSeq.len
 
     # spot check the condensation outbound and inbound edge derivations
     check g2.condensation().edges(dOutbound).toSeq.len == 8
@@ -211,10 +242,11 @@ suite "Integration":
 
   test "Basis is calculated correctly":
     # not using the manual basis override, can we derive a basis
-    for (g,b) in bases:
+    for (g, b) in bases:
       g.basis = @[] # wipe manual
       var derivedBasis = collect:
-        for v in g.basis: v
+        for v in g.basis:
+          v
 
       # derived basis can differ the set basis since any one member of an SCC may
       # be selected as a member of the basis set however the basis cardinality is
@@ -293,56 +325,56 @@ suite "Integration":
     # g2 has cycles. ELS produces a vertex ordering whose backedge set (FAS)
     # makes the graph acyclic when pruned.
     # var v = g2.vertices.toSeq()
-    for (g,orderfas) in elsOrderAndFas:
-      let (order,fas) = orderfas
+    for (g, orderfas) in elsOrderAndFas:
+      let (order, fas) = orderfas
       var ordering = initVertexOrdering[Vertex[string, NoData]](g.vertices)
       ordering.eadesLinSmith()
-      check ordering.foldl(a&b.label,"") == order
+      check ordering.foldl(a & b.label, "") == order
       var thefas = ordering.fas
       check (thefas -+- g.fasEadesLinSmith()).card == 0
       check thefas.card == fas.len
 
   test "Vertex Ordering Reorder pass":
     var ordering = initVertexOrdering[Vertex[string, NoData]](g2.vertices)
-    var order = ordering.printLabels.replace(" ","")
+    var order = ordering.printLabels.replace(" ", "")
     check ordering.fas.len == 6 # Vertices in order of insertion
     ordering.reorderPass()
     # Reorder pass gets ELS output here...
     check ordering.fas.len == 1 # F-G
 
   test "Isolated SCC count":
-    for (g,n) in isolatedSccs:
+    for (g, n) in isolatedSccs:
       check g.countIsolatedScc == n
 
   test "Singleton SCC count":
-    for (g,n) in singletonSccs:
+    for (g, n) in singletonSccs:
       check g.countSingletonScc == n
 
   test "Brute Vertex Ordering":
     # test strategy is to find the total backedge count after brute forcing an order
     # across all SCC
-    for (g,thefas) in minfas: # 2 0 1 3 4
+    for (g, thefas) in minfas: # 2 0 1 3 4
       var
         pre, post: int
-        n=thefas.len
+        n = thefas.len
       for c in g.sccs:
         if c.singleton():
           var nself = c.vertices.chooseAny.selfEdges.len
           pre += nself
           post += nself
           continue
-        var order = initVertexOrdering[Vertex[string,NoData]](c.vertices)
-        pre+=order.fas.len
+        var order = initVertexOrdering[Vertex[string, NoData]](c.vertices)
+        pre += order.fas.len
         # invariant: ordering exists for unconstrained
-        post+=c.bruteVertexOrdering[:Vertex[string,NoData]]().get().fas.len
+        post += bruteVertexOrdering[Vertex[string, NoData]](c).get().fas.len
 
-      check pre>=post and post==n
+      check pre >= post and post == n
 
   test "FAS brute edge set":
-    for (g,thefas) in minfas: # 2 0 1 3 4
+    for (g, thefas) in minfas: # 2 0 1 3 4
       var
         post: int
-        n=thefas.len
+        n = thefas.len
       for c in g.sccs:
         if c.singleton():
           var nself = c.vertices.chooseAny.selfEdges.len
@@ -350,25 +382,25 @@ suite "Integration":
           continue
         # invariant that unconstrained minimal edgeset exists
         var es = c.fasBruteEdgeSet.get()
-        var order = initVertexOrdering[Vertex[string,NoData]](c.vertices)
+        var order = initVertexOrdering[Vertex[string, NoData]](c.vertices)
         post += es.card
 
-      check post==n
+      check post == n
 
   test "Fas for a graph":
-    for (g,fas) in minfas:
+    for (g, fas) in minfas:
       check g.fas.card == fas.len
 
   test "Acyclic testing (including self edge case)":
-    for (g,fas) in minfas: # 2 0 1 3 4 5
-      if fas.len>0:
+    for (g, fas) in minfas: # 2 0 1 3 4 5
+      if fas.len > 0:
         check not ccAcyclic.test(g) # not acyclic without a fas
-        check ccAcyclic.test(g,g.fas) # derived fas shall make it acyclic
+        check ccAcyclic.test(g, g.fas) # derived fas shall make it acyclic
       else:
         check ccAcyclic.test(g) # no fas its already acyclic
 
   test "Kahn Ordering":
-    for (g,o) in gkahn:
+    for (g, o) in gkahn:
       var korder = ""
       for v in g.kahn:
         korder &= v.label
@@ -380,9 +412,8 @@ suite "Integration":
       korder &= v.label
 
   test "Toposort":
-    for (g,o) in gtopo:
+    for (g, o) in gtopo:
       var order = ""
       for v in g.toposort(g.fas):
         order &= v.label
       check order == o
-        

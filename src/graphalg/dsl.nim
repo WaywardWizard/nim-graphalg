@@ -104,7 +104,6 @@ proc toGraphAst(g: DslGraph): NimNode {.compiletime.} =
     if label in g.selfedges:
       edgePuts.add quote do:
         `vmap`[`llabel`].connectToSelf()
-        
 
   body.add vertexPuts
   body.add edgePuts
@@ -115,7 +114,7 @@ proc toGraphAst(g: DslGraph): NimNode {.compiletime.} =
         for v in `vmap`.values:
           yield v
 
-    return initGraph[string,NoData](iter)
+    return initGraph[string, NoData](iter)
 
   var rt = parseStmt("Graph[string, NoData]")
   var theResult =
